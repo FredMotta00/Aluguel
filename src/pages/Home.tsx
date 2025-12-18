@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Search, Briefcase, SlidersHorizontal, Loader2, Zap, Shield, Clock, Headphones } from 'lucide-react';
+import { Search, Briefcase, SlidersHorizontal, Loader2, Zap, Shield, Clock, Headphones, GraduationCap } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -9,9 +9,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Produto } from '@/lib/database.types';
 
 const features = [
-  { icon: Shield, title: 'Equipamentos Certificados', desc: 'Todos calibrados e certificados' },
-  { icon: Clock, title: 'Disponibilidade Rápida', desc: 'Entrega em até 24 horas' },
-  { icon: Headphones, title: 'Suporte Técnico', desc: 'Assistência especializada' }
+  { icon: Shield, title: 'Equipamentos Calibrados com Certificação RBC', desc: 'Todos calibrados e certificados' },
+  { icon: Clock, title: 'Disponibilidade Rápida', desc: 'Disponível em até 24 horas (Após consulta em estoque)' },
+  { icon: Headphones, title: 'Suporte Técnico', desc: 'Assistência especializada' },
+  { icon: GraduationCap, title: 'Treinamento Operacional', desc: 'Gratuito presencial ou online' }
 ];
 
 const Home = () => {
@@ -136,7 +137,7 @@ const Home = () => {
                 <SelectValue placeholder="Filtrar por status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="todos">Todos os Status</SelectItem>
+                
                 <SelectItem value="disponivel">Disponível</SelectItem>
                 <SelectItem value="alugado">Alugado</SelectItem>
                 <SelectItem value="manutencao">Em Manutenção</SelectItem>
