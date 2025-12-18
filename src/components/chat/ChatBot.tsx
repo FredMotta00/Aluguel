@@ -58,7 +58,7 @@ const ChatBot = () => {
     <>
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-20 left-4 z-50 w-80 h-96 bg-card border border-border rounded-lg shadow-xl flex flex-col animate-scale-in">
+        <div className="fixed bottom-20 right-4 z-50 w-80 h-96 bg-card border border-border rounded-lg shadow-xl flex flex-col animate-scale-in">
           {/* Header */}
           <div className="flex items-center justify-between p-3 border-b border-border bg-primary rounded-t-lg">
             <div className="flex items-center gap-2">
@@ -118,7 +118,7 @@ const ChatBot = () => {
       {/* Floating Button */}
       <Button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-4 left-4 z-50 h-12 w-12 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+        className="fixed bottom-4 right-4 z-50 h-12 w-12 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
         size="icon"
       >
         {isOpen ? (
