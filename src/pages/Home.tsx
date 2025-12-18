@@ -44,8 +44,25 @@ const Home = () => {
     }
   });
   const produtosFiltrados = useMemo(() => {
+    const searchTermLower = searchTerm.toLowerCase().trim();
+    const searchWords = searchTermLower.split(/\s+/).filter(word => word.length > 0);
+    
     return produtos.filter(p => {
-      const matchesSearch = p.nome.toLowerCase().includes(searchTerm.toLowerCase()) || p.descricao.toLowerCase().includes(searchTerm.toLowerCase());
+      // Busca em nome, descrição e especificações
+      const textoCompleto = [
+        p.nome,
+        p.descricao,
+        ...(p.especificacoes || [])
+      ].join(' ').toLowerCase();
+      
+      // Se não há termo de busca, retorna todos
+      if (searchWords.length === 0) {
+        const matchesStatus = statusFilter === 'todos' || p.status === statusFilter;
+        return matchesStatus;
+      }
+      
+      // Verifica se pelo menos uma palavra da busca está presente
+      const matchesSearch = searchWords.some(word => textoCompleto.includes(word));
       const matchesStatus = statusFilter === 'todos' || p.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
@@ -94,7 +111,7 @@ const Home = () => {
               <div className="flex flex-col sm:flex-row gap-2">
                 <div className="relative flex-1">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input placeholder="Buscar equipamentos..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-12 h-12 border-0 bg-muted/50 rounded-xl text-base focus-visible:ring-primary" />
+                  <Input placeholder="Buscar por nome, tipo ou característica (ex: relé, CT Analyser, proteção...)" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-12 h-12 border-0 bg-muted/50 rounded-xl text-base focus-visible:ring-primary" />
                 </div>
                 <Button className="h-12 px-8 rounded-xl shadow-md hover:shadow-lg transition-all">
                   <Search className="w-5 h-5 sm:mr-2" />
