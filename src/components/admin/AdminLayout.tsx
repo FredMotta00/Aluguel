@@ -1,32 +1,76 @@
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { 
-  LayoutDashboard, 
-  Package, 
-  CalendarCheck, 
+import {
+  LayoutDashboard,
+  Package,
+  CalendarCheck,
   Menu,
   X,
-  Home
+  Home,
+  Tag,
+  Percent
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import logoExs from '@/assets/logo-exs.png';
+import logoExs from '@/assets/logo-exs-new.png';
+import { auth } from '@/lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import { Loader2 } from 'lucide-react';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/admin' },
   { icon: CalendarCheck, label: 'Reservas', path: '/admin/reservas' },
   { icon: Package, label: 'Produtos', path: '/admin/produtos' },
+  { icon: Package, label: 'Pacotes', path: '/admin/pacotes' },
+  { icon: Tag, label: 'Categorias', path: '/admin/categorias' },
+  { icon: Percent, label: 'Promoções', path: '/admin/promocoes' },
 ];
 
 export default function AdminLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user && user.email) {
+        // Import dynamically to avoid circular deps
+        const { checkIsAdmin } = await import('@/lib/adminAuth');
+        const adminStatus = await checkIsAdmin(user.email);
+
+        if (adminStatus) {
+          setIsAdmin(true);
+        } else {
+          // User is logged in but not admin
+          navigate('/admin/login');
+        }
+      } else {
+        // Not logged in
+        navigate('/admin/login');
+      }
+      setIsLoading(false);
+    });
+    return () => unsubscribe();
+  }, [navigate]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Double check to prevent flash of content
+  if (!isAdmin) return null;
 
   return (
     <div className="min-h-screen flex bg-muted/30">
       {/* Mobile overlay */}
       {isSidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
@@ -41,10 +85,10 @@ export default function AdminLayout() {
           {/* Logo */}
           <div className="p-4 border-b border-border flex items-center justify-between">
             <Link to="/admin" className="flex items-center gap-2">
-              <img src={logoExs} alt="EXS Solutions" className="h-8 w-auto" />
+              <img src={logoExs} alt="EXS Solutions" className="h-12 w-auto" />
             </Link>
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="icon"
               className="lg:hidden"
               onClick={() => setIsSidebarOpen(false)}
@@ -64,8 +108,8 @@ export default function AdminLayout() {
                   onClick={() => setIsSidebarOpen(false)}
                   className={cn(
                     "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                    isActive 
-                      ? "bg-primary text-primary-foreground" 
+                    isActive
+                      ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                   )}
                 >
@@ -78,8 +122,8 @@ export default function AdminLayout() {
 
           {/* Footer */}
           <div className="p-4 border-t border-border">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="w-full justify-start gap-2"
               asChild
             >
@@ -96,14 +140,14 @@ export default function AdminLayout() {
       <div className="flex-1 flex flex-col min-h-screen">
         {/* Mobile header */}
         <header className="lg:hidden sticky top-0 z-30 bg-card border-b border-border p-4 flex items-center gap-4">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="icon"
             onClick={() => setIsSidebarOpen(true)}
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <img src={logoExs} alt="EXS Solutions" className="h-6 w-auto" />
+          <img src={logoExs} alt="EXS Solutions" className="h-10 w-auto" />
         </header>
 
         {/* Page content */}

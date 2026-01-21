@@ -1,13 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { db } from '@/integrations/firebase/client';
+import { collection, query, getDocs, orderBy, limit, where, getDoc, doc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { 
-  CalendarCheck, 
-  Package, 
-  Clock, 
-  CheckCircle2, 
+import {
+  CalendarCheck,
+  Package,
+  Clock,
+  CheckCircle2,
   DollarSign,
   ArrowRight,
   Loader2
@@ -15,18 +16,22 @@ import {
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { ReservaWithProduto, Produto } from '@/lib/database.types';
 
 export default function AdminDashboard() {
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['admin-stats'],
     queryFn: async () => {
-      const [reservasResult, produtosResult] = await Promise.all([
-        supabase.from('reservas').select('status, valor_total'),
-        supabase.from('produtos').select('status')
+      const reservasCol = collection(db, 'reservas');
+      const produtosCol = collection(db, 'produtos');
+
+      const [reservasSnapshot, produtosSnapshot] = await Promise.all([
+        getDocs(reservasCol),
+        getDocs(produtosCol)
       ]);
 
-      const reservas = reservasResult.data || [];
-      const produtos = produtosResult.data || [];
+      const reservas = reservasSnapshot.docs.map(d => d.data());
+      const produtos = produtosSnapshot.docs.map(d => d.data());
 
       const pendentes = reservas.filter(r => r.status === 'pendente').length;
       const confirmadas = reservas.filter(r => r.status === 'confirmada').length;
@@ -48,17 +53,36 @@ export default function AdminDashboard() {
   const { data: recentReservas, isLoading: reservasLoading } = useQuery({
     queryKey: ['admin-recent-reservas'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('reservas')
-        .select(`
-          *,
-          produtos (nome)
-        `)
-        .order('created_at', { ascending: false })
-        .limit(5);
+      const q = query(
+        collection(db, 'reservas'),
+        orderBy('created_at', 'desc'),
+        limit(5)
+      );
 
-      if (error) throw error;
-      return data;
+      const querySnapshot = await getDocs(q);
+
+      const reservasData = await Promise.all(
+        querySnapshot.docs.map(async (reservaDoc) => {
+          const reservaData = reservaDoc.data();
+          let produto = null;
+
+          if (reservaData.produto_id) {
+            const produtoDocRef = doc(db, 'produtos', reservaData.produto_id);
+            const produtoSnap = await getDoc(produtoDocRef);
+            if (produtoSnap.exists()) {
+              produto = { id: produtoSnap.id, ...produtoSnap.data() } as Produto;
+            }
+          }
+
+          return {
+            id: reservaDoc.id,
+            ...reservaData,
+            produtos: produto
+          } as ReservaWithProduto;
+        })
+      );
+
+      return reservasData;
     }
   });
 
@@ -157,6 +181,73 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
+      {/* Quick Actions */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Link to="/admin/produtos">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Package className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <p className="font-semibold">Produtos</p>
+                  <p className="text-xs text-muted-foreground">Gerenciar catálogo</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link to="/admin/pacotes">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-500/10 rounded-lg">
+                  <Package className="h-6 w-6 text-green-600" />
+                </div>
+                <div>
+                  <p className="font-semibold">Pacotes</p>
+                  <p className="text-xs text-muted-foreground">Criar combos</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link to="/admin/promocoes">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-500/10 rounded-lg">
+                  <ArrowRight className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="font-semibold">Promoções</p>
+                  <p className="text-xs text-muted-foreground">Upgrades e ofertas</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link to="/admin/categorias">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-purple-500/10 rounded-lg">
+                  <Package className="h-6 w-6 text-purple-600" />
+                </div>
+                <div>
+                  <p className="font-semibold">Categorias</p>
+                  <p className="text-xs text-muted-foreground">Organizar produtos</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+      </div>
+
       {/* Recent Reservations */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
@@ -181,8 +272,8 @@ export default function AdminDashboard() {
           ) : recentReservas && recentReservas.length > 0 ? (
             <div className="space-y-4">
               {recentReservas.map((reserva) => (
-                <div 
-                  key={reserva.id} 
+                <div
+                  key={reserva.id}
                   className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
                 >
                   <div className="space-y-1">

@@ -1,103 +1,70 @@
+/* EXS Solutions - New Visual Identity */
+@import url('https://fonts.googleapis.com/css2?family=Exo:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
-
 @layer base {
   :root {
-    --background: 0 0% 99%;
-    --foreground: 160 25% 10%;
+    /* New EXS Brand Colors */
+    --background: 214 78% 9%; /* #061629 - Deep Blue */
+    --foreground: 0 0% 100%; /* White */
 
-    --card: 0 0% 100%;
-    --card-foreground: 160 25% 10%;
+    --card: 214 70% 12%;
+    --card-foreground: 0 0% 100%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 160 25% 10%;
+    --popover: 214 70% 12%;
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 158 64% 40%;
-    --primary-foreground: 0 0% 100%;
+    /* Primary: Neon Green for buttons */
+    --primary: 145 100% 50%;
+    --primary-foreground: 214 78% 9%;
 
-    --secondary: 160 25% 96%;
-    --secondary-foreground: 160 25% 20%;
+    /* Secondary: Institutional Green #165131 */
+    --secondary: 150 55% 20%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 160 15% 95%;
-    --muted-foreground: 160 10% 45%;
+    /* Muted: Slightly lighter blue */
+    --muted: 214 60% 15%;
+    --muted-foreground: 210 20% 65%;
 
-    --accent: 158 50% 92%;
-    --accent-foreground: 158 64% 25%;
+    /* Accent: Medium Blue #105F91 */
+    --accent: 202 80% 32%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 160 15% 90%;
-    --input: 160 15% 88%;
-    --ring: 158 64% 40%;
+    --border: 214 50% 20%;
+    --input: 214 50% 18%;
+    --ring: 145 100% 50%;
 
-    --radius: 0.625rem;
+    --radius: 0rem; /* Square design as requested */
 
-    --sidebar-background: 160 20% 98%;
-    --sidebar-foreground: 160 15% 25%;
-    --sidebar-primary: 158 64% 40%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 160 25% 94%;
-    --sidebar-accent-foreground: 158 64% 25%;
-    --sidebar-border: 160 15% 90%;
-    --sidebar-ring: 158 64% 40%;
+    --sidebar-background: 214 75% 8%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 145 100% 50%;
+    --sidebar-primary-foreground: 214 78% 9%;
+    --sidebar-accent: 214 60% 15%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 214 50% 18%;
+    --sidebar-ring: 145 100% 50%;
 
     /* Extended palette */
-    --success: 158 64% 40%;
-    --success-foreground: 0 0% 100%;
+    --success: 145 100% 50%;
+    --success-foreground: 214 78% 9%;
     --warning: 38 92% 50%;
     --warning-foreground: 38 92% 15%;
-    --info: 210 100% 50%;
+    --info: 202 80% 50%;
     --info-foreground: 0 0% 100%;
 
-    /* Shadows */
-    --shadow-xs: 0 1px 2px 0 hsl(160 15% 10% / 0.03);
-    --shadow-sm: 0 1px 3px 0 hsl(160 15% 10% / 0.06), 0 1px 2px -1px hsl(160 15% 10% / 0.06);
-    --shadow-md: 0 4px 6px -1px hsl(160 15% 10% / 0.07), 0 2px 4px -2px hsl(160 15% 10% / 0.07);
-    --shadow-lg: 0 10px 15px -3px hsl(160 15% 10% / 0.08), 0 4px 6px -4px hsl(160 15% 10% / 0.08);
-    --shadow-xl: 0 20px 25px -5px hsl(160 15% 10% / 0.08), 0 8px 10px -6px hsl(160 15% 10% / 0.08);
-  }
-
-  .dark {
-    --background: 160 15% 6%;
-    --foreground: 160 10% 95%;
-
-    --card: 160 15% 9%;
-    --card-foreground: 160 10% 95%;
-
-    --popover: 160 15% 9%;
-    --popover-foreground: 160 10% 95%;
-
-    --primary: 158 55% 48%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 160 15% 14%;
-    --secondary-foreground: 160 10% 90%;
-
-    --muted: 160 15% 14%;
-    --muted-foreground: 160 10% 55%;
-
-    --accent: 160 20% 16%;
-    --accent-foreground: 158 55% 65%;
-
-    --destructive: 0 62% 45%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 160 15% 16%;
-    --input: 160 15% 16%;
-    --ring: 158 55% 48%;
-
-    --sidebar-background: 160 15% 8%;
-    --sidebar-foreground: 160 10% 90%;
-    --sidebar-primary: 158 55% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 160 15% 12%;
-    --sidebar-accent-foreground: 160 10% 90%;
-    --sidebar-border: 160 15% 14%;
-    --sidebar-ring: 158 55% 48%;
+    /* Shadows with brand colors */
+    --shadow-xs: 0 1px 2px 0 hsl(214 78% 5% / 0.3);
+    --shadow-sm: 0 1px 3px 0 hsl(214 78% 5% / 0.4), 0 1px 2px -1px hsl(214 78% 5% / 0.4);
+    --shadow-md: 0 4px 6px -1px hsl(214 78% 5% / 0.4), 0 2px 4px -2px hsl(214 78% 5% / 0.4);
+    --shadow-lg: 0 10px 15px -3px hsl(214 78% 5% / 0.4), 0 4px 6px -4px hsl(214 78% 5% / 0.4);
+    --shadow-xl: 0 20px 25px -5px hsl(214 78% 5% / 0.4), 0 8px 10px -6px hsl(214 78% 5% / 0.4);
   }
 }
 
@@ -112,37 +79,38 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-    font-feature-settings: 'cv11', 'ss01';
+    font-family: 'Exo', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3, h4, h5, h6 {
+    font-family: 'Exo', system-ui, sans-serif;
     @apply font-semibold tracking-tight;
   }
 }
 
 @layer utilities {
+  /* Brand Gradients */
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(158 64% 40%) 0%, hsl(158 64% 32%) 100%);
+    background: linear-gradient(135deg, hsl(145 100% 50%) 0%, hsl(145 100% 40%) 100%);
   }
 
   .gradient-hero {
-    background: linear-gradient(160deg, hsl(158 64% 42%) 0%, hsl(158 60% 35%) 50%, hsl(160 55% 28%) 100%);
+    background: linear-gradient(160deg, #061629 0%, #0a2540 50%, #105F91 100%);
   }
 
   .gradient-subtle {
-    background: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(160 20% 98%) 100%);
+    background: linear-gradient(180deg, #061629 0%, #0a2540 100%);
   }
 
   .gradient-card {
-    background: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(160 15% 99%) 100%);
+    background: linear-gradient(145deg, hsl(214 70% 12%) 0%, hsl(214 70% 10%) 100%);
   }
 
   .text-gradient {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(158 64% 40%) 0%, hsl(158 50% 50%) 100%);
+    background-image: linear-gradient(135deg, hsl(145 100% 50%) 0%, hsl(145 100% 65%) 100%);
   }
 
   .glass {
@@ -153,14 +121,36 @@
     @apply bg-card/95 backdrop-blur-sm border border-border/50;
   }
 
+  /* Neon Glow Effects */
   .shadow-glow {
-    box-shadow: 0 0 40px -10px hsl(158 64% 40% / 0.3);
+    box-shadow: 0 0 40px -10px hsl(145 100% 50% / 0.4);
   }
 
   .shadow-glow-sm {
-    box-shadow: 0 0 20px -5px hsl(158 64% 40% / 0.2);
+    box-shadow: 0 0 20px -5px hsl(145 100% 50% / 0.3);
   }
 
+  /* Molecule Background Pattern */
+  .bg-molecules {
+    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23105F91' stroke-width='0.5' opacity='0.15'%3E%3Ccircle cx='20' cy='20' r='8'/%3E%3Ccircle cx='80' cy='30' r='6'/%3E%3Ccircle cx='50' cy='70' r='10'/%3E%3Ccircle cx='30' cy='80' r='5'/%3E%3Cline x1='28' y1='20' x2='74' y2='30'/%3E%3Cline x1='80' y1='36' x2='55' y2='62'/%3E%3Cline x1='45' y1='75' x2='33' y2='78'/%3E%3Cline x1='25' y1='25' x2='30' y2='75'/%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  /* Pill Button Override */
+  .btn-pill {
+    @apply rounded-full px-6 py-2;
+  }
+
+  /* Tag Styles */
+  .tag {
+    @apply inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-accent/20 text-accent-foreground border border-accent/30;
+  }
+
+  .tag-arrow::after {
+    content: '↗';
+    @apply ml-1;
+  }
+
+  /* Animations */
   .animate-fade-up {
     animation: fade-up 0.5s ease-out forwards;
   }
@@ -175,6 +165,10 @@
 
   .animate-slide-in {
     animation: slide-in 0.4s ease-out forwards;
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
   }
 
   @keyframes fade-up {
@@ -218,4 +212,18 @@
       transform: translateX(0);
     }
   }
+
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 20px -5px hsl(145 100% 50% / 0.3);
+    }
+    50% {
+      box-shadow: 0 0 30px -5px hsl(145 100% 50% / 0.5);
+    }
+  }
+}
+
+/* Component Overrides for shadcn/ui */
+@layer components {
+  /* Removed pill button override to support square design */
 }

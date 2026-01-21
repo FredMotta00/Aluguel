@@ -7,28 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { db } from '@/integrations/firebase/client';
+import { collection, query, where, getDocs, updateDoc, doc, getDoc, orderBy } from 'firebase/firestore';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar, Package, Search, Loader2, CheckCircle, Clock, XCircle, AlertCircle, ArrowRight } from 'lucide-react';
-
-interface Produto {
-  id: string;
-  nome: string;
-  imagem: string | null;
-}
-
-interface ReservaWithProduto {
-  id: string;
-  produto_id: string;
-  cliente_nome: string;
-  cliente_email: string;
-  data_inicio: string;
-  data_fim: string;
-  valor_total: number;
-  status: 'pendente' | 'confirmada' | 'finalizada' | 'cancelada';
-  produtos: Produto | null;
-}
+import { Produto, ReservaWithProduto } from '@/lib/database.types';
 
 const statusConfig = {
   pendente: { label: 'Pendente', icon: Clock, className: 'bg-warning/10 text-warning border-warning/20' },
@@ -47,27 +31,46 @@ const MinhasReservas = () => {
     queryKey: ['minhas-reservas', searchedEmail],
     queryFn: async () => {
       if (!searchedEmail) return [];
-      
-      const { data, error } = await supabase
-        .from('reservas')
-        .select('*, produtos(*)')
-        .eq('cliente_email', searchedEmail)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data as ReservaWithProduto[];
+
+      const q = query(
+        collection(db, 'reservas'),
+        where('cliente_email', '==', searchedEmail),
+        orderBy('created_at', 'desc')
+      );
+
+      const querySnapshot = await getDocs(q);
+
+      // Perform client-side join to fetch associated products
+      const reservasData = await Promise.all(
+        querySnapshot.docs.map(async (reservaDoc) => {
+          const reservaData = reservaDoc.data();
+          let produto = null;
+
+          if (reservaData.produto_id) {
+            const produtoDocRef = doc(db, 'produtos', reservaData.produto_id);
+            const produtoSnap = await getDoc(produtoDocRef);
+            if (produtoSnap.exists()) {
+              produto = { id: produtoSnap.id, ...produtoSnap.data() } as Produto;
+            }
+          }
+
+          return {
+            id: reservaDoc.id,
+            ...reservaData,
+            produtos: produto
+          } as ReservaWithProduto;
+        })
+      );
+
+      return reservasData;
     },
     enabled: !!searchedEmail
   });
 
   const cancelMutation = useMutation({
     mutationFn: async (reservaId: string) => {
-      const { error } = await supabase
-        .from('reservas')
-        .update({ status: 'cancelada' })
-        .eq('id', reservaId);
-      
-      if (error) throw error;
+      const reservaRef = doc(db, 'reservas', reservaId);
+      await updateDoc(reservaRef, { status: 'cancelada' });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['minhas-reservas'] });
@@ -90,11 +93,11 @@ const MinhasReservas = () => {
     setSearchedEmail(email.trim());
   };
 
-  const reservasAtivas = useMemo(() => 
+  const reservasAtivas = useMemo(() =>
     reservas.filter(r => ['pendente', 'confirmada'].includes(r.status)), [reservas]);
-  const reservasFinalizadas = useMemo(() => 
+  const reservasFinalizadas = useMemo(() =>
     reservas.filter(r => r.status === 'finalizada'), [reservas]);
-  const reservasCanceladas = useMemo(() => 
+  const reservasCanceladas = useMemo(() =>
     reservas.filter(r => r.status === 'cancelada'), [reservas]);
 
   const ReservaCard = ({ reserva }: { reserva: ReservaWithProduto }) => {
@@ -106,8 +109,8 @@ const MinhasReservas = () => {
       <Card className="border-border/50 hover:border-primary/30 transition-all duration-200 hover:shadow-md">
         <CardContent className="p-5">
           <div className="flex gap-4">
-            <img 
-              src={reserva.produtos?.imagem || '/placeholder.svg'} 
+            <img
+              src={reserva.produtos?.imagem || '/placeholder.svg'}
               alt={reserva.produtos?.nome}
               className="w-20 h-20 rounded-lg object-cover shrink-0"
             />
@@ -119,7 +122,7 @@ const MinhasReservas = () => {
                   {status.label}
                 </Badge>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground mb-3">
                 <div className="flex items-center gap-1.5">
                   <Calendar className="h-3.5 w-3.5" />
@@ -135,9 +138,9 @@ const MinhasReservas = () => {
                   R$ {Number(reserva.valor_total).toLocaleString('pt-BR')}
                 </span>
                 {['pendente', 'confirmada'].includes(reserva.status) && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="text-destructive hover:text-destructive hover:bg-destructive/10"
                     onClick={() => cancelMutation.mutate(reserva.id)}
                     disabled={cancelMutation.isPending}

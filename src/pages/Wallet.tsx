@@ -11,14 +11,14 @@ import { WalletTransactionList } from '@/components/wallet/WalletTransactionList
 import { TierProgress } from '@/components/wallet/TierProgress';
 
 const WalletPage = () => {
-  const { 
-    user, 
-    company, 
-    transactions, 
-    isLoading, 
+  const {
+    user,
+    company,
+    transactions,
+    isLoading,
     isAuthenticated,
     createCompany,
-    isCreatingCompany 
+    isCreatingCompany
   } = useWallet();
 
   const [formData, setFormData] = useState({
@@ -29,7 +29,7 @@ const WalletPage = () => {
   const handleCreateCompany = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.nome.trim()) return;
-    
+
     await createCompany({
       nome: formData.nome,
       cnpj: formData.cnpj || undefined
@@ -53,7 +53,7 @@ const WalletPage = () => {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
         {/* Header */}
-        <div className="gradient-hero text-primary-foreground py-16">
+        <div className="gradient-hero text-white py-16">
           <div className="container mx-auto px-4">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-3 bg-primary-foreground/20 rounded-xl">
@@ -61,11 +61,11 @@ const WalletPage = () => {
               </div>
               <div>
                 <h1 className="text-3xl md:text-4xl font-bold">EXS Wallet</h1>
-                <p className="text-primary-foreground/80">Programa de Fidelidade</p>
+                <p className="text-white/80">Programa de Fidelidade</p>
               </div>
             </div>
-            <p className="text-lg text-primary-foreground/80 max-w-2xl">
-              Acumule cashback em todas as suas locações e use o saldo para obter descontos. 
+            <p className="text-lg text-white/80 max-w-2xl">
+              Acumule cashback em todas as suas locações e use o saldo para obter descontos.
               Quanto mais você aluga, maior seu nível e maior o cashback!
             </p>
           </div>
@@ -132,7 +132,7 @@ const WalletPage = () => {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
         {/* Header */}
-        <div className="gradient-hero text-primary-foreground py-16">
+        <div className="gradient-hero text-white py-16">
           <div className="container mx-auto px-4">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-3 bg-primary-foreground/20 rounded-xl">
@@ -140,10 +140,10 @@ const WalletPage = () => {
               </div>
               <div>
                 <h1 className="text-3xl md:text-4xl font-bold">EXS Wallet</h1>
-                <p className="text-primary-foreground/80">Programa de Fidelidade</p>
+                <p className="text-white/80">Programa de Fidelidade</p>
               </div>
             </div>
-            <p className="text-lg text-primary-foreground/80 max-w-2xl">
+            <p className="text-lg text-white/80 max-w-2xl">
               Cadastre sua empresa para começar a acumular cashback em todas as suas locações!
             </p>
           </div>
@@ -184,9 +184,9 @@ const WalletPage = () => {
                 <div className="bg-muted/50 p-3 rounded-lg text-sm text-muted-foreground">
                   <p>📧 Email vinculado: <strong className="text-foreground">{user?.email}</strong></p>
                 </div>
-                <Button 
-                  type="submit" 
-                  className="w-full gap-2" 
+                <Button
+                  type="submit"
+                  className="w-full gap-2"
                   disabled={isCreatingCompany || !formData.nome.trim()}
                 >
                   {isCreatingCompany ? (
@@ -237,7 +237,7 @@ const WalletPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       {/* Header */}
-      <div className="gradient-hero text-primary-foreground py-16">
+      <div className="gradient-hero text-white py-16">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 mb-4">
@@ -246,11 +246,11 @@ const WalletPage = () => {
               </div>
               <div>
                 <h1 className="text-3xl md:text-4xl font-bold">EXS Wallet</h1>
-                <p className="text-primary-foreground/80">{company.nome}</p>
+                <p className="text-white/80">{company.nome}</p>
               </div>
             </div>
             <div className="hidden md:block text-right">
-              <p className="text-sm text-primary-foreground/70">Logado como</p>
+              <p className="text-sm text-white/70">Logado como</p>
               <p className="font-medium">{user?.email}</p>
             </div>
           </div>

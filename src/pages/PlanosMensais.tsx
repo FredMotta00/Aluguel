@@ -6,31 +6,55 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { Link } from 'react-router-dom';
+import { db } from '@/integrations/firebase/client';
+import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { Link, useNavigate } from 'react-router-dom';
+import { Produto } from '@/lib/database.types';
 
 const PlanosMensais = () => {
   const [dataRetirada, setDataRetirada] = useState('');
   const [dataDevolucao, setDataDevolucao] = useState('');
+  const navigate = useNavigate();
 
-  const ENDERECO_SEDE = "Rua da Empresa, 123 - Centro, São Paulo - SP";
+  const handleSearch = () => {
+    navigate('/?plan=monthly');
+  };
+
+  const ENDERECO_SEDE = "R. Antônio Gonzáles Vasques, 126 - Bosque da Saude, Americana - SP";
 
   const { data: produtos, isLoading } = useQuery({
     queryKey: ['produtos-mensal'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('produtos')
-        .select('*')
-        .eq('status', 'disponivel')
-        .order('preco_diario', { ascending: true });
+      // Create a query against the collection
+      const q = query(
+        collection(db, 'inventory')
+      );
 
-      if (error) throw error;
-      return data;
+      const querySnapshot = await getDocs(q);
+
+      const data = querySnapshot.docs.map(doc => {
+        const d = doc.data();
+        return {
+          id: doc.id,
+          nome: d.name || d.nome || "Equipamento",
+          descricao: d.description || d.descricao || "",
+          imagem: d.images?.[0] || d.imagem || null,
+          preco_diario: d.commercial?.dailyRate || d.preco_diario || 0,
+          preco_mensal: d.commercial?.monthlyRate || null,
+          status: d.status
+        };
+      });
+
+      // Filter and sort client-side to avoid index complexity
+      // Filter: Show only available products that have a defined monthly rate
+      return data
+        .filter(p => (p.status === 'available' || p.status === 'disponivel') && p.preco_mensal !== null)
+        .sort((a, b) => (a.preco_mensal || 0) - (b.preco_mensal || 0)) as unknown as Produto[];
     },
   });
 
+  // No longer used as we use manual pricing
   const calcularPrecoMensal = (precoDiario: number) => {
-    // Desconto de 30% para aluguel mensal
     return Math.round(precoDiario * 30 * 0.7);
   };
 
@@ -71,7 +95,7 @@ const PlanosMensais = () => {
                 Aluguel Mensal
               </h1>
               <p className="text-xl opacity-90 mb-6">
-                Alugue equipamentos por períodos maiores e economize. 
+                Alugue equipamentos por períodos maiores e economize.
                 Ideal para projetos de longa duração, produções e eventos recorrentes.
               </p>
               <ul className="space-y-2">
@@ -89,63 +113,6 @@ const PlanosMensais = () => {
                 </li>
               </ul>
             </div>
-
-            {/* Formulário de Busca */}
-            <Card className="bg-card/95 backdrop-blur">
-              <CardHeader>
-                <CardTitle className="text-foreground">Alugue um equipamento mensal</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Local de Retirada Fixo */}
-                <div className="space-y-2">
-                  <Label className="text-foreground">Local de Retirada</Label>
-                  <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
-                    <MapPin className="h-5 w-5 text-primary flex-shrink-0" />
-                    <div>
-                      <p className="font-medium text-sm">{ENDERECO_SEDE}</p>
-                      <p className="text-xs text-muted-foreground">Segunda a Sexta, 8h às 18h</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="dataRetirada" className="text-foreground">
-                      Data de Retirada
-                    </Label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="dataRetirada"
-                        type="date"
-                        className="pl-10"
-                        value={dataRetirada}
-                        onChange={(e) => setDataRetirada(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="dataDevolucao" className="text-foreground">Data de Devolução</Label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="dataDevolucao"
-                        type="date"
-                        className="pl-10"
-                        value={dataDevolucao}
-                        onChange={(e) => setDataDevolucao(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button className="w-full gap-2" size="lg">
-                  <Search className="h-4 w-4" />
-                  Buscar Equipamentos
-                </Button>
-              </CardFooter>
-            </Card>
           </div>
         </div>
       </section>
@@ -157,13 +124,13 @@ const PlanosMensais = () => {
             <div>
               <h2 className="text-3xl font-bold mb-4">O que é o Aluguel Mensal?</h2>
               <p className="text-muted-foreground mb-4">
-                O aluguel mensal é perfeito para quem precisa de equipamentos por períodos mais longos. 
-                Com o período mínimo de 30 dias, você tem a flexibilidade de escolher o equipamento 
+                O aluguel mensal é perfeito para quem precisa de equipamentos por períodos mais longos.
+                Com o período mínimo de 30 dias, você tem a flexibilidade de escolher o equipamento
                 que melhor atende às suas necessidades.
               </p>
               <p className="text-muted-foreground mb-6">
-                Tenha a liberdade de usar quando quiser, sem se preocupar com os custos de manutenção 
-                e as responsabilidades de ter um equipamento próprio. Economize até 30% em comparação 
+                Tenha a liberdade de usar quando quiser, sem se preocupar com os custos de manutenção
+                e as responsabilidades de ter um equipamento próprio. Economize até 30% em comparação
                 com o aluguel diário.
               </p>
               <Button variant="outline" className="gap-2">
@@ -220,9 +187,10 @@ const PlanosMensais = () => {
             </div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {produtos?.slice(0, 6).map((produto) => {
-                const precoMensal = calcularPrecoMensal(produto.preco_diario);
+              {produtos?.slice(0, 6).map((produto: any) => {
+                const precoMensal = produto.preco_mensal;
                 const precoDiarioTotal = produto.preco_diario * 30;
+                const desconto = precoDiarioTotal > 0 ? Math.round(((precoDiarioTotal - precoMensal) / precoDiarioTotal) * 100) : 0;
 
                 return (
                   <Card key={produto.id} className="overflow-hidden group hover:shadow-lg transition-all duration-300">
@@ -238,9 +206,11 @@ const PlanosMensais = () => {
                           Sem imagem
                         </div>
                       )}
-                      <Badge className="absolute top-3 left-3 bg-destructive text-destructive-foreground">
-                        30% OFF
-                      </Badge>
+                      {desconto > 0 && (
+                        <Badge className="absolute top-3 left-3 bg-destructive text-destructive-foreground">
+                          {desconto}% OFF
+                        </Badge>
+                      )}
                     </div>
                     <CardContent className="p-4">
                       <h3 className="font-semibold text-lg mb-2">{produto.nome}</h3>
@@ -272,25 +242,6 @@ const PlanosMensais = () => {
         </div>
       </section>
 
-      {/* CTA Final */}
-      <section className="py-16 px-4 bg-primary text-primary-foreground">
-        <div className="container max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-4">
-            Pronto para economizar?
-          </h2>
-          <p className="text-lg opacity-90 mb-8 max-w-2xl mx-auto">
-            Entre em contato conosco e solicite um orçamento personalizado para o seu projeto.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" variant="secondary" className="text-lg px-8">
-              Solicitar Orçamento
-            </Button>
-            <Button size="lg" variant="outline" className="text-lg px-8 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
-              Falar com Consultor
-            </Button>
-          </div>
-        </div>
-      </section>
     </div>
   );
 };

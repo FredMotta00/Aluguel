@@ -1,11 +1,47 @@
+// New Unified Inventory Schema
+export interface Categoria {
+  id: string;
+  nome: string;
+  slug: string;
+}
+
+export interface CommercialData {
+  isForRent: boolean;
+  isForSale: boolean;
+  dailyRate: number | null;
+  salePrice: number | null;
+  monthlyRate: number | null;
+  cashbackRate: number; // e.g., 0.05 for 5%
+}
+
+export interface TechnicalData {
+  model: string;
+  weight?: string;
+  specs: Record<string, any>; // Flexible JSON for specs (kv pairs)
+  calibrationValidUntil?: string; // ISO Date
+  manufacturer?: string;
+}
+
+export type ItemStatus = 'available' | 'rented' | 'maintenance' | 'sold';
+
 export interface Produto {
   id: string;
   nome: string;
   descricao: string;
-  especificacoes: string[];
-  preco_diario: number;
   imagem: string | null;
-  status: 'disponivel' | 'alugado' | 'manutencao';
+  status: ItemStatus;
+
+  // New Nested Fields
+  sku?: string;
+  type: 'equipment' | 'accessory';
+  commercial: CommercialData;
+  technical: TechnicalData;
+  category?: string; // Slug or ID of the category
+
+  // Legacy compatibility (calculated or mapped)
+  preco_diario?: number; // legacy: mapped from commercial.dailyRate
+  especificacoes?: string[]; // legacy: mapped from technical.specs
+
   created_at: string;
   updated_at: string;
 }
@@ -43,6 +79,7 @@ export interface Company {
   endereco: string | null;
   wallet_balance: number;
   pending_balance: number;
+  loyalty_points: number;
   tier: CompanyTier;
   total_locacoes_ano: number;
   user_id: string;

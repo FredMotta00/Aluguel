@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { db } from '@/integrations/firebase/client';
+import { collection, query, where, getDocs, orderBy, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -33,16 +34,17 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { 
-  Search, 
-  Loader2, 
-  CheckCircle, 
-  XCircle, 
+import {
+  Search,
+  Loader2,
+  CheckCircle,
+  XCircle,
   Flag,
   CalendarCheck,
   Phone,
   Mail
 } from 'lucide-react';
+import { ReservaWithProduto, Produto } from '@/lib/database.types';
 
 type ReservaStatus = 'pendente' | 'confirmada' | 'finalizada' | 'cancelada';
 
@@ -61,44 +63,62 @@ export default function AdminReservas() {
   const { data: reservas, isLoading } = useQuery({
     queryKey: ['admin-reservas', statusFilter],
     queryFn: async () => {
-      let query = supabase
-        .from('reservas')
-        .select(`
-          *,
-          produtos (nome, imagem)
-        `)
-        .order('created_at', { ascending: false });
+      let q = query(
+        collection(db, 'reservas'),
+        orderBy('created_at', 'desc')
+      );
 
       if (statusFilter !== 'all') {
-        query = query.eq('status', statusFilter);
+        q = query(
+          collection(db, 'reservas'),
+          where('status', '==', statusFilter),
+          orderBy('created_at', 'desc')
+        );
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
-      return data;
+      const querySnapshot = await getDocs(q);
+
+      const reservasData = await Promise.all(
+        querySnapshot.docs.map(async (reservaDoc) => {
+          const reservaData = reservaDoc.data();
+          let produto = null;
+
+          if (reservaData.produto_id) {
+            const produtoDocRef = doc(db, 'produtos', reservaData.produto_id);
+            const produtoSnap = await getDoc(produtoDocRef);
+            if (produtoSnap.exists()) {
+              produto = { id: produtoSnap.id, ...produtoSnap.data() } as Produto;
+            }
+          }
+
+          return {
+            id: reservaDoc.id,
+            ...reservaData,
+            produtos: produto
+          } as ReservaWithProduto;
+        })
+      );
+
+      return reservasData;
     }
   });
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: ReservaStatus }) => {
-      const { error } = await supabase
-        .from('reservas')
-        .update({ status })
-        .eq('id', id);
-
-      if (error) throw error;
+      const reservaRef = doc(db, 'reservas', id);
+      await updateDoc(reservaRef, { status });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-reservas'] });
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
       queryClient.invalidateQueries({ queryKey: ['admin-recent-reservas'] });
-      
+
       const actionLabels = {
         confirmar: 'confirmada',
         cancelar: 'cancelada',
         finalizar: 'finalizada'
       };
-      
+
       toast({
         title: 'Sucesso',
         description: `Reserva ${actionLabels[actionDialog.type]} com sucesso`,
@@ -142,7 +162,7 @@ export default function AdminReservas() {
     }
   };
 
-  const filteredReservas = reservas?.filter(r => 
+  const filteredReservas = reservas?.filter(r =>
     r.cliente_nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     r.cliente_email.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -319,8 +339,8 @@ export default function AdminReservas() {
       </Card>
 
       {/* Action Confirmation Dialog */}
-      <AlertDialog 
-        open={actionDialog.open} 
+      <AlertDialog
+        open={actionDialog.open}
         onOpenChange={(open) => setActionDialog(prev => ({ ...prev, open }))}
       >
         <AlertDialogContent>

@@ -1,0 +1,100 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user is owning data
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // USERS COLLECTION
+    // Users can read and write only their own document
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // PRODUCTS COLLECTION (Inventory)
+    // - Everyone can read products (public catalog)
+    // - Only admins can write (for now, we'll lock updates to prevent user tampering)
+    // - If you need an admin, you'd add a role check. For now, read-only is safest for public.
+    match /produtos/{produtoId} {
+      allow read: if true;
+      allow write: if false; // Locked. Use Firebase Console to add products or create an admin role logic.
+    }
+    
+    // Also matched 'inventory' just in case (as verified in seed.ts)
+    match /inventory/{itemId} {
+      allow read: if true;
+      allow write: if isAuthenticated(); // Allows Admin Panel to manage products
+    }
+
+    // CATEGORIES COLLECTION
+    // - Everyone can read categories (for filtering)
+    // - Authenticated users (admins) can write
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    // ADMINS COLLECTION
+    // - Authenticated users can read (to check their own admin status)
+    // - TEMPORARY: Allow authenticated write for initial setup
+    // - After adding your admin, change back to: allow write: if false;
+    match /admins/{adminEmail} {
+      allow read: if isAuthenticated();
+      allow write: if false; // LOCKED: Admins must be added via Firebase Console
+    }
+
+    // RESERVAS COLLECTION
+    match /reservas/{reservaId} {
+      allow create: if isAuthenticated();
+      allow read: if isAuthenticated() && (
+        resource.data.usuario_id == request.auth.uid
+      );
+      allow update: if isAuthenticated() && (
+        resource.data.usuario_id == request.auth.uid
+      );
+    }
+
+    // ORDERS COLLECTION
+    match /orders/{orderId} {
+      allow create: if isAuthenticated();
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid
+      );
+      allow update: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid
+      );
+    }
+
+    // COMPANIES (Wallet) COLLECTION
+    // Critical Data: Wallet Balance
+    // - Users can read their own company wallet
+    // - Writes are STRICTLY restricted. 
+    // - WARNING: Since 'useWallet.ts' currently writes to this from Client Side, 
+    //   we MUST allow writes for the app to function, BUT this is not 'impenetrable'.
+    //   Real security requires Cloud Functions.
+    //   For now, we allow writes if user owns the company.
+    match /companies/{companyId} {
+      allow read: if isAuthenticated() && isOwner(resource.data.user_id);
+      allow create: if isAuthenticated() && isOwner(request.resource.data.user_id);
+      allow update: if isAuthenticated() && isOwner(resource.data.user_id);
+    }
+
+    // WALLET TRANSACTIONS
+    // - Users can read their own transactions
+    // - Creation allowed if owner (again, risky but necessary for client-side logic)
+    match /wallet_transactions/{txId} {
+      // Create: User can only create transactions where they are listed as the owner
+      allow create: if isAuthenticated() && isOwner(request.resource.data.user_id);
+
+      // Read & Update: Only the owner can read or update their transactions
+      allow read, update: if isAuthenticated() && isOwner(resource.data.user_id);
+    }
+  }
+}

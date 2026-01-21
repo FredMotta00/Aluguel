@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 // 👇 Trocamos o cliente do Supabase pelo nosso do Firebase
 import { auth, db } from '@/lib/firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
@@ -11,17 +11,17 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Loader2, LogIn, UserPlus } from 'lucide-react';
-import logoExs from '@/assets/logo-exs.png';
+import { Loader2, LogIn, UserPlus, CheckCircle2, XCircle } from 'lucide-react';
+import logoExs from '@/assets/logo-exs-new.png';
 
 const Auth = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  
+
   // Login state
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
-  
+
   // Signup state
   const [signupNome, setSignupNome] = useState('');
   const [signupEmail, setSignupEmail] = useState('');
@@ -30,15 +30,69 @@ const Auth = () => {
   const [signupPassword, setSignupPassword] = useState('');
   const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
 
+  // CNPJ Validation State
+  const [validatingCNPJ, setValidatingCNPJ] = useState(false);
+  const [cnpjStatus, setCnpjStatus] = useState<'idle' | 'valid' | 'invalid'>('idle');
+
   // 👇 Verificação de sessão (Adaptado para Firebase)
+  const location = useLocation();
+  // Get redirect path or default to home
+  const from = location.state?.from?.pathname || "/";
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        navigate('/');
+        navigate(from, { replace: true });
       }
     });
     return () => unsubscribe();
-  }, [navigate]);
+  }, [navigate, from]);
+
+  // 👇 Validação de CNPJ
+  const validateCNPJ = async (docValue: string) => {
+    const numbers = docValue.replace(/\D/g, '');
+
+    // Se não for CNPJ (14 dígitos), reseta e retorna (pode ser CPF)
+    if (numbers.length !== 14) {
+      setCnpjStatus('idle');
+      return;
+    }
+
+    setValidatingCNPJ(true);
+    setCnpjStatus('idle');
+
+    try {
+      const response = await fetch(`https://open.cnpja.com/office/${numbers}`);
+
+      if (!response.ok) {
+        throw new Error('Falha na consulta');
+      }
+
+      const data = await response.json();
+
+      if (data && (data.company || data.alias || data.name)) {
+        setCnpjStatus('valid');
+        const companyName = data.company?.name || data.alias || data.name;
+        toast.success(`CNPJ Válido: ${companyName}`);
+
+        // Auto-preencher nome se estiver vazio
+        if (!signupNome) {
+          setSignupNome(companyName);
+        }
+      } else {
+        setCnpjStatus('invalid');
+        toast.error('CNPJ não encontrado ou inválido.');
+      }
+    } catch (error) {
+      console.error("Erro ao validar CNPJ:", error);
+      // Em caso de erro na API, não bloqueamos, mas avisamos (ou consideramos inválido dependendo da regra)
+      // Aqui vou considerar inválido para forçar atenção, mas você pode mudar
+      setCnpjStatus('invalid');
+      toast.error('Não foi possível validar este CNPJ.');
+    } finally {
+      setValidatingCNPJ(false);
+    }
+  };
 
   // 👇 Lógica de Login (Firebase Auth)
   const handleLogin = async (e: React.FormEvent) => {
@@ -48,7 +102,7 @@ const Auth = () => {
     try {
       await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
       toast.success('Login realizado com sucesso!');
-      navigate('/');
+      navigate(from, { replace: true });
     } catch (error: any) {
       console.error(error);
       if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
@@ -64,7 +118,13 @@ const Auth = () => {
   // 👇 Lógica de Cadastro (Firebase Auth + Firestore)
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    // Bloqueia se CNPJ for inválido (opcional: remova se quiser permitir mesmo com erro na API)
+    if (cnpjStatus === 'invalid') {
+      toast.error('Por favor, corrija o CNPJ antes de continuar.');
+      return;
+    }
+
     if (signupPassword !== signupConfirmPassword) {
       toast.error('As senhas não coincidem');
       return;
@@ -81,7 +141,7 @@ const Auth = () => {
       // 1. Cria o usuário na Autenticação
       const userCredential = await createUserWithEmailAndPassword(auth, signupEmail, signupPassword);
       const user = userCredential.user;
-      
+
       // 2. Salva os dados extras (Nome, CPF, Telefone) no Banco de Dados
       // Diferente do Supabase, o Firebase Auth não guarda esses dados nativamente, então usamos a coleção 'users'
       await setDoc(doc(db, "users", user.uid), {
@@ -144,7 +204,7 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/30 p-4">
       <Card className="w-full max-w-md shadow-xl border-border/50">
         <CardHeader className="text-center space-y-4">
-          <img src={logoExs} alt="EXS Solutions" className="h-12 mx-auto" />
+          <img src={logoExs} alt="EXS Solutions" className="h-16 mx-auto" />
           <div>
             <CardTitle className="text-2xl">Bem-vindo</CardTitle>
             <CardDescription>Acesse sua conta ou cadastre-se</CardDescription>
@@ -241,15 +301,48 @@ const Auth = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-documento">CPF / CNPJ</Label>
-                  <Input
-                    id="signup-documento"
-                    type="text"
-                    placeholder="000.000.000-00 ou 00.000.000/0000-00"
-                    value={signupDocumento}
-                    onChange={(e) => setSignupDocumento(formatDocumento(e.target.value))}
-                    maxLength={18}
-                    required
-                  />
+                  <div className="relative">
+                    <Input
+                      id="signup-documento"
+                      type="text"
+                      placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                      value={signupDocumento}
+                      onChange={(e) => {
+                        const val = formatDocumento(e.target.value);
+                        setSignupDocumento(val);
+                        // Reseta status se mudar o valor
+                        if (cnpjStatus !== 'idle') setCnpjStatus('idle');
+                      }}
+                      onBlur={(e) => validateCNPJ(e.target.value)}
+                      maxLength={18}
+                      required
+                      className={
+                        cnpjStatus === 'valid'
+                          ? 'border-green-500 pr-10'
+                          : cnpjStatus === 'invalid'
+                            ? 'border-red-500 pr-10'
+                            : ''
+                      }
+                    />
+                    {validatingCNPJ && (
+                      <div className="absolute right-3 top-2.5">
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      </div>
+                    )}
+                    {!validatingCNPJ && cnpjStatus === 'valid' && (
+                      <div className="absolute right-3 top-2.5">
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      </div>
+                    )}
+                    {!validatingCNPJ && cnpjStatus === 'invalid' && (
+                      <div className="absolute right-3 top-2.5">
+                        <XCircle className="h-4 w-4 text-red-500" />
+                      </div>
+                    )}
+                  </div>
+                  {cnpjStatus === 'invalid' && (
+                    <p className="text-xs text-red-500 mt-1">CNPJ não encontrado ou inválido.</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Senha</Label>
@@ -273,7 +366,7 @@ const Auth = () => {
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button type="submit" className="w-full" disabled={loading || validatingCNPJ}>
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />

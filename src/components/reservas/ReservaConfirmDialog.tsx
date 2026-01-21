@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,6 +32,7 @@ interface ReservaConfirmDialogProps {
   dataFim: Date;
   diasLocacao: number;
   valorTotal: number;
+  isMonthly?: boolean;
   onSuccess: () => void;
 }
 
@@ -42,12 +44,15 @@ export const ReservaConfirmDialog = ({
   dataFim,
   diasLocacao,
   valorTotal,
+  isMonthly = false,
   onSuccess
 }: ReservaConfirmDialogProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     nome: '',
     email: '',
@@ -55,20 +60,31 @@ export const ReservaConfirmDialog = ({
     observacoes: ''
   });
 
-  // 👇 Auto-fill user data if logged in
+  // 👇 Enforce Login & Auto-fill
   useEffect(() => {
-    if (open && auth.currentUser) {
-      setFormData(prev => ({
-        ...prev,
-        email: auth.currentUser?.email || '',
-        // In the future, we can fetch name/phone from the 'users' collection here
-      }));
+    if (open) {
+      if (!auth.currentUser) {
+        toast({
+          title: 'Login necessário',
+          description: 'Você precisa estar logado para fazer uma reserva.',
+          variant: 'destructive',
+        });
+        // Redirect to login preserving the current page as return url
+        // We use setTimeout to show the toast before redirecting, or just redirect immediately
+        onOpenChange(false); // Close dialog
+        navigate('/auth', { state: { from: location } });
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          email: auth.currentUser?.email || '',
+        }));
+      }
     }
-  }, [open]);
+  }, [open, navigate, location, toast, onOpenChange]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.nome || !formData.email) {
       toast({
         title: 'Campos obrigatórios',
@@ -81,7 +97,7 @@ export const ReservaConfirmDialog = ({
     // Check if user is logged in (optional, but good practice)
     const user = auth.currentUser;
     if (!user) {
-       toast({
+      toast({
         title: 'Login necessário',
         description: 'Por favor, faça login para continuar.',
         variant: 'destructive'
@@ -92,41 +108,34 @@ export const ReservaConfirmDialog = ({
     setLoading(true);
 
     try {
-      // 👇 SAVING TO FIREBASE (Collection 'orders')
-      await addDoc(collection(db, 'orders'), {
-        userId: user.uid,
-        userEmail: user.email,
-        customerDetails: {
-            name: formData.nome,
-            email: formData.email,
-            phone: formData.telefone,
-            notes: formData.observacoes
-        },
-        items: [
-          {
-            productId: produto.id,
-            productName: produto.nome,
-            productImage: produto.imagem,
-            dailyRate: Number(produto.preco_diario),
-            type: "rent"
-          }
-        ],
-        dates: {
-          start: dataInicio.toISOString(),
-          end: dataFim.toISOString(),
-          days: diasLocacao
-        },
-        financial: {
-          totalAmount: valorTotal,
-          currency: "BRL",
-          status: "pending_payment"
-        },
-        status: "pending_approval", // Order status
-        createdAt: new Date().toISOString()
+      // 👇 SAVING TO FIREBASE (Collection 'reservas')
+      // Changed from 'orders' to 'reservas' to match AdminPanel and RentalsList schema
+      await addDoc(collection(db, 'reservas'), {
+        produto_id: produto.id,
+        // For now, linking to user. We might need to link to 'company_id' later for wallet logic
+        // If company logic is strict, we should fetch company_id first. 
+        // For simplicity/B2C, we rely on cliente_email.
+        cliente_nome: formData.nome,
+        cliente_email: formData.email,
+        cliente_telefone: formData.telefone,
+        data_inicio: dataInicio.toISOString(),
+        data_fim: dataFim.toISOString(),
+        valor_total: valorTotal,
+
+        // Default fields for schema compatibility
+        company_id: null,
+        cashback_amount: 0,
+        wallet_discount: 0,
+        observacoes: formData.observacoes,
+
+        status: "pendente", // Default status
+        tipo_locacao: isMonthly ? "mensal" : "diaria",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       });
 
       setSuccess(true);
-      
+
       setTimeout(() => {
         toast({
           title: 'Solicitação enviada!',
@@ -183,23 +192,23 @@ export const ReservaConfirmDialog = ({
         <div className="bg-slate-50 rounded-lg p-4 space-y-3 border border-slate-100">
           <div className="flex items-start gap-4">
             {produto.imagem ? (
-                 <img 
-                 src={produto.imagem} 
-                 alt={produto.nome}
-                 className="w-16 h-16 rounded-lg object-cover bg-white"
-               />
+              <img
+                src={produto.imagem}
+                alt={produto.nome}
+                className="w-16 h-16 rounded-lg object-cover bg-white"
+              />
             ) : (
-                <div className="w-16 h-16 rounded-lg bg-slate-200 flex items-center justify-center text-xs text-slate-500">Sem foto</div>
+              <div className="w-16 h-16 rounded-lg bg-slate-200 flex items-center justify-center text-xs text-slate-500">Sem foto</div>
             )}
-           
+
             <div className="flex-1">
               <h4 className="font-semibold text-slate-900">{produto.nome}</h4>
               <p className="text-sm text-slate-500 line-clamp-1">{produto.descricao || "Sem descrição"}</p>
             </div>
           </div>
-          
+
           <Separator />
-          
+
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="flex items-center gap-2 text-slate-500">
               <Calendar className="h-4 w-4" />
@@ -213,10 +222,14 @@ export const ReservaConfirmDialog = ({
 
           <div className="space-y-2 pt-2 border-t border-slate-200">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-500">{diasLocacao} {diasLocacao === 1 ? 'dia' : 'dias'} × R$ {Number(produto.preco_diario).toLocaleString('pt-BR')}</span>
+              {isMonthly ? (
+                <span className="text-blue-600 font-bold">Plano Mensal (Fixo)</span>
+              ) : (
+                <span className="text-slate-500">{diasLocacao} {diasLocacao === 1 ? 'dia' : 'dias'} × R$ {Number(produto.preco_diario).toLocaleString('pt-BR')}</span>
+              )}
               <span className="text-slate-900">R$ {valorTotal.toLocaleString('pt-BR')}</span>
             </div>
-            
+
             <div className="flex items-center justify-between pt-2 border-t border-slate-200">
               <div className="flex items-center gap-2">
                 <CreditCard className="h-4 w-4 text-slate-500" />
@@ -288,17 +301,17 @@ export const ReservaConfirmDialog = ({
           </div>
 
           <div className="flex gap-3 pt-4">
-            <Button 
-              type="button" 
-              variant="outline" 
+            <Button
+              type="button"
+              variant="outline"
               className="flex-1"
               onClick={() => onOpenChange(false)}
               disabled={loading}
             >
               Cancelar
             </Button>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="flex-1 gap-2"
               disabled={loading}
             >
