@@ -8,7 +8,9 @@ import {
   X,
   Home,
   Tag,
-  Percent
+  Percent,
+  Settings,
+  Users
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
@@ -24,6 +26,8 @@ const navItems = [
   { icon: Package, label: 'Pacotes', path: '/admin/pacotes' },
   { icon: Tag, label: 'Categorias', path: '/admin/categorias' },
   { icon: Percent, label: 'Promoções', path: '/admin/promocoes' },
+  { icon: Settings, label: 'Editor do Site', path: '/admin/site-editor' },
+  { icon: Users, label: 'Administradores', path: '/admin/usuarios' },
 ];
 
 export default function AdminLayout() {

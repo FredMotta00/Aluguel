@@ -21,9 +21,11 @@ const Footer = () => {
                     <div className="space-y-4">
                         <h4 className="text-white font-bold uppercase tracking-wider text-sm">Navegação</h4>
                         <ul className="space-y-2 text-sm">
-                            <li><Link to="/" className="hover:text-primary transition-colors">Catálogo</Link></li>
+                            <li><Link to="/" className="hover:text-primary transition-colors">Home</Link></li>
                             <li><Link to="/planos" className="hover:text-primary transition-colors">Planos</Link></li>
-                            <li><Link to="/wallet" className="hover:text-primary transition-colors">EXS Wallet</Link></li>
+                            <li><Link to="/pacotes" className="hover:text-primary transition-colors">Pacotes</Link></li>
+                            <li><Link to="/fidelidade" className="hover:text-primary transition-colors">Fidelidade</Link></li>
+                            <li><Link to="/minha-conta" className="hover:text-primary transition-colors">Minha Conta</Link></li>
                             <li><Link to="/carrinho" className="hover:text-primary transition-colors">Carrinho</Link></li>
                         </ul>
                     </div>

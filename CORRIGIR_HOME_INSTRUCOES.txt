@@ -1,0 +1,51 @@
+/**
+ * INSTRUÇÕES PARA CORRIGIR Home.tsx
+ * 
+ * 1. Abra src/pages/Home.tsx
+ * 2. Encontre a linha 85 que começa com: const produtosFormatados: Produto[] = querySnapshot.docs.map
+ * 3. SELECIONE TUDO desde a linha 85 até a linha 118 (até o "return produtosFormatados;")
+ * 4. DELETE tudo que selecionou
+ * 5. COLE o código abaixo NO LUGAR:
+ */
+
+const produtosFormatados: Produto[] = querySnapshot.docs.map(doc => {
+  const data = doc.data();
+  
+  // BOS: accessories são itens INCLUSOS no kit, não o produto principal
+  const accessories = data.accessories || [];
+  
+  // NOME do KIT: vem de tags[0] (ex: "UTS 500 - UNIVERSAL")
+  const nome = (data.tags && data.tags.length > 0) 
+    ? data.tags[0] 
+    : "Equipamento";
+  
+  // PREÇO do KIT: campo rentPrice na raiz
+  const dailyRate = data.rentPrice || 0;
+  
+  // STATUS: BOS usa "AVAILABLE" (maiúsculo)
+  const status = data.status === 'AVAILABLE' ? 'available' : 'unavailable';
+  
+  return {
+    id: doc.id,
+    nome: nome,
+    descricao: data.description || "",
+    imagem: accessories[0]?.imageUrl || null,
+    preco_diario: dailyRate,
+    preco_mensal: data.monthlyRate || null,
+    status: status,
+    especificacoes: data.specifications || [],
+    created_at: data.createdAt?.toString() || new Date().toISOString(),
+    category: data.category || '',
+    updated_at: new Date().toISOString()
+  };
+});
+
+return produtosFormatados;
+
+/**
+ * DEPOIS DE COLAR:
+ * 1. Salve o arquivo (Ctrl+S)
+ * 2. Verifique se não há erros no terminal
+ * 3. Recarregue o site
+ * 4. Os produtos devem aparecer com nomes e preços corretos!
+ */

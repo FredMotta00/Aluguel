@@ -2,99 +2,191 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Helper function to check if user is authenticated
+    // ============================================
+    // HELPER FUNCTIONS
+    // ============================================
+    
+    // Check if user is authenticated
     function isAuthenticated() {
       return request.auth != null;
     }
     
-    // Helper function to check if user is owning data
+    // Check if user owns the document
     function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-
-    // USERS COLLECTION
-    // Users can read and write only their own document
-    match /users/{userId} {
-      allow read, write: if isOwner(userId);
-    }
-
-    // PRODUCTS COLLECTION (Inventory)
-    // - Everyone can read products (public catalog)
-    // - Only admins can write (for now, we'll lock updates to prevent user tampering)
-    // - If you need an admin, you'd add a role check. For now, read-only is safest for public.
-    match /produtos/{produtoId} {
-      allow read: if true;
-      allow write: if false; // Locked. Use Firebase Console to add products or create an admin role logic.
+      return isAuthenticated() && request.auth.uid == userId;
     }
     
-    // Also matched 'inventory' just in case (as verified in seed.ts)
-    match /inventory/{itemId} {
-      allow read: if true;
-      allow write: if isAuthenticated(); // Allows Admin Panel to manage products
+    // Check if user is an admin (exists in admins collection)
+    // Admin documents use EMAIL as document ID, not UID
+    function isAdmin() {
+      return isAuthenticated() && 
+             request.auth.token.email != null &&
+             exists(/databases/$(database)/documents/admins/$(request.auth.token.email));
+    }
+    
+    // Check if user can read admin data (either is admin or checking their own status)
+    function canReadAdminData(docId) {
+      return isAuthenticated() && (isAdmin() || request.auth.uid == docId);
     }
 
+    // ============================================
+    // USERS/CUSTOMERS COLLECTION
+    // ============================================
+    // Users can read and write only their own document
+    // Admins can read all users
+    match /users/{userId} {
+      allow read: if isAdmin() || isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update, delete: if isAdmin() || isOwner(userId);
+    }
+    
+    match /customers/{customerId} {
+      allow read: if isAdmin() || isOwner(customerId);
+      // Allow create if user is authenticated AND creating their own document
+      allow create: if isAuthenticated() && request.auth.uid == customerId;
+      allow update: if isAdmin() || isOwner(customerId);
+      allow delete: if isAdmin();
+    }
+
+    // ============================================
+    // INVENTORY/PRODUCTS COLLECTION
+    // ============================================
+    // Everyone can READ products (public catalog)
+    // Only ADMINS can WRITE (create, update, delete)
+    match /produtos/{produtoId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /rental_equipments/{itemId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /inventory/{itemId} {
+      allow read: if true; // Public catalog
+      allow create, update, delete: if isAdmin(); // Only admins can manage inventory
+    }
+
+    // ============================================
     // CATEGORIES COLLECTION
-    // - Everyone can read categories (for filtering)
-    // - Authenticated users (admins) can write
+    // ============================================
+    // Everyone can read categories (for filtering)
+    // Only admins can write
     match /categories/{categoryId} {
       allow read: if true;
-      allow write: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
     }
 
+    // ============================================
     // ADMINS COLLECTION
-    // - Authenticated users can read (to check their own admin status)
-    // - TEMPORARY: Allow authenticated write for initial setup
-    // - After adding your admin, change back to: allow write: if false;
-    match /admins/{adminEmail} {
-      allow read: if isAuthenticated();
-      allow write: if false; // LOCKED: Admins must be added via Firebase Console
+    // ============================================
+    // Authenticated users can read their own admin status
+    // Admins can read all admin documents
+    // NO ONE can write (must be managed via Firebase Console or secure script)
+    match /admins/{adminId} {
+      allow read: if canReadAdminData(adminId);
+      allow write: if false; // LOCKED: Admins must be added via Firebase Console or secure script
     }
 
+    // ============================================
     // RESERVAS COLLECTION
+    // ============================================
+    // Users can create reservations
+    // Users can only read/update their own reservations
+    // Admins can read/update all reservations
     match /reservas/{reservaId} {
-      allow create: if isAuthenticated();
-      allow read: if isAuthenticated() && (
-        resource.data.usuario_id == request.auth.uid
-      );
-      allow update: if isAuthenticated() && (
-        resource.data.usuario_id == request.auth.uid
-      );
+      allow create: if isAuthenticated() && 
+                       request.resource.data.usuario_id == request.auth.uid;
+      
+      allow read: if isAdmin() || 
+                     (isAuthenticated() && resource.data.usuario_id == request.auth.uid);
+      
+      allow update: if isAdmin() || 
+                       (isAuthenticated() && resource.data.usuario_id == request.auth.uid);
+      
+      allow delete: if isAdmin();
     }
 
+    // ============================================
     // ORDERS COLLECTION
+    // ============================================
+    // Users can create orders
+    // Users can only read/update their own orders
+    // Admins can read/update all orders
     match /orders/{orderId} {
-      allow create: if isAuthenticated();
-      allow read: if isAuthenticated() && (
-        resource.data.userId == request.auth.uid
-      );
-      allow update: if isAuthenticated() && (
-        resource.data.userId == request.auth.uid
-      );
+      allow create: if isAuthenticated() && 
+                       request.resource.data.userId == request.auth.uid;
+      
+      allow read: if isAdmin() || 
+                     (isAuthenticated() && resource.data.userId == request.auth.uid);
+      
+      allow update: if isAdmin() || 
+                       (isAuthenticated() && resource.data.userId == request.auth.uid);
+      
+      allow delete: if isAdmin();
     }
 
+    // ============================================
     // COMPANIES (Wallet) COLLECTION
-    // Critical Data: Wallet Balance
-    // - Users can read their own company wallet
-    // - Writes are STRICTLY restricted. 
-    // - WARNING: Since 'useWallet.ts' currently writes to this from Client Side, 
-    //   we MUST allow writes for the app to function, BUT this is not 'impenetrable'.
-    //   Real security requires Cloud Functions.
-    //   For now, we allow writes if user owns the company.
+    // ============================================
+    // Users can read/write their own company wallet
+    // Admins can read all companies
     match /companies/{companyId} {
-      allow read: if isAuthenticated() && isOwner(resource.data.user_id);
-      allow create: if isAuthenticated() && isOwner(request.resource.data.user_id);
-      allow update: if isAuthenticated() && isOwner(resource.data.user_id);
+      allow read: if isAdmin() || 
+                     (isAuthenticated() && resource.data.user_id == request.auth.uid);
+      
+      allow create: if isAuthenticated() && 
+                       request.resource.data.user_id == request.auth.uid;
+      
+      allow update: if isAdmin() || 
+                       (isAuthenticated() && resource.data.user_id == request.auth.uid);
+      
+      allow delete: if isAdmin();
     }
 
+    // ============================================
     // WALLET TRANSACTIONS
-    // - Users can read their own transactions
-    // - Creation allowed if owner (again, risky but necessary for client-side logic)
+    // ============================================
+    // Users can create and read their own transactions
+    // Admins can read all transactions
     match /wallet_transactions/{txId} {
-      // Create: User can only create transactions where they are listed as the owner
-      allow create: if isAuthenticated() && isOwner(request.resource.data.user_id);
+      allow create: if isAuthenticated() && 
+                       request.resource.data.user_id == request.auth.uid;
+      
+      allow read: if isAdmin() || 
+                     (isAuthenticated() && resource.data.user_id == request.auth.uid);
+      
+      allow update: if isAdmin() || 
+                       (isAuthenticated() && resource.data.user_id == request.auth.uid);
+      
+      allow delete: if isAdmin();
+    }
+    
+    // ============================================
+    // PACKAGES COLLECTION (if exists)
+    // ============================================
+    match /packages/{packageId} {
+      allow read: if true; // Public packages
+      allow write: if isAdmin();
+    }
+    
+    // ============================================
+    // PROMOTIONS COLLECTION (if exists)
+    // ============================================
+    match /promotions/{promoId} {
+      allow read: if true; // Public promotions
+      allow write: if isAdmin();
+    }
 
-      // Read & Update: Only the owner can read or update their transactions
-      allow read, update: if isAuthenticated() && isOwner(resource.data.user_id);
+    // ============================================
+    // SITE CONTENT COLLECTION (CMS)
+    // ============================================
+    // Public can read site content
+    // Only admins can modify site content
+    match /site_content/{docId} {
+      allow read: if true; // Public read
+      allow write: if isAdmin(); // Only admins can edit
     }
   }
 }

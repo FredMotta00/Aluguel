@@ -2,35 +2,25 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, AlertCircle, Tag, ExternalLink } from "lucide-react";
+import { CheckCircle2, AlertCircle, Tag, ExternalLink, Package } from "lucide-react";
+import { GroupedProduct } from "@/lib/productGrouping";
 
 export interface ProdutoProps {
-  produto: {
-    id: string;
-    nome: string;
-    descricao: string;
-    imagem: string | null;
-    status: string;
-    especificacoes?: string[];
-    // Hybrid Data Support
-    preco_diario?: number; // Legacy or explicit
-    preco_mensal?: number | null;
-    commercial?: {
-      isForRent: boolean;
-      isForSale: boolean;
-      dailyRate: number | null;
-      salePrice: number | null;
-      monthlyRate: number | null;
-    };
-  };
+  produto: GroupedProduct;
 }
 
 const ProdutoCard = ({ produto }: ProdutoProps) => {
+  // Verificar se é produto agrupado (múltiplas unidades)
+  const isGrouped = produto.totalUnits && produto.totalUnits > 1;
+  const hasPartialAvailability = produto.status === 'partial';
+
   const getStatusInfo = (status: string) => {
     switch (status) {
       case "available":
       case "disponivel":
         return { color: "bg-green-500", label: "Disponível", icon: CheckCircle2 };
+      case "partial":
+        return { color: "bg-amber-500", label: "Parcialmente Disponível", icon: AlertCircle };
       case "rented":
       case "alugado":
         return { color: "bg-amber-500", label: "Alugado", icon: AlertCircle };
@@ -71,7 +61,7 @@ const ProdutoCard = ({ produto }: ProdutoProps) => {
           </div>
         )}
 
-        <div className="absolute top-2 right-2 flex gap-1">
+        <div className="absolute top-2 right-2 flex gap-1 flex-wrap justify-end">
           {/* Sale Badge */}
           {isForSale && (
             <Badge className="bg-blue-600 text-white border-none shadow-sm">
@@ -79,6 +69,15 @@ const ProdutoCard = ({ produto }: ProdutoProps) => {
               Venda
             </Badge>
           )}
+
+          {/* Units Badge - OCULTO: Sistema rastreia internamente mas não mostra ao cliente */}
+          {/* isGrouped && (
+            <Badge className="bg-slate-800 text-white border-none shadow-sm">
+              <Package className="w-3 h-3 mr-1" />
+              {produto.availableUnits} de {produto.totalUnits}
+            </Badge>
+          ) */}
+
           {/* Status Badge */}
           <Badge className={`${statusInfo.color} text-white border-none shadow-sm`}>
             <Icon className="w-3 h-3 mr-1" />

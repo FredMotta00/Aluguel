@@ -35,12 +35,16 @@ const Header = () => {
     navigate('/auth');
   };
 
-  const navItems = [
-    { label: 'Catálogo', to: '/', icon: Package },
-    { label: 'Fidelidade', to: '/fidelidade', icon: Trophy, highlighted: true },
+  const allNavItems = [
+    { label: 'Home', to: '/', icon: Package },
     { label: 'Planos', to: '/planos', icon: CreditCard },
-    { label: 'EXS Wallet', to: '/wallet', icon: Wallet }
+    { label: 'Pacotes', to: '/pacotes', icon: Package },
+    { label: 'Fidelidade', to: '/fidelidade', icon: Trophy, highlighted: true },
+    { label: 'Minha Conta', to: '/minha-conta', icon: Wallet, requiresAuth: true }
   ];
+
+  // Filter navigation items based on authentication status
+  const navItems = allNavItems.filter(item => !item.requiresAuth || user);
 
   const getInitials = (name: string | null) => {
     if (!name) return 'EX';

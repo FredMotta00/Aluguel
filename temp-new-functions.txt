@@ -1,0 +1,86 @@
+    const handleAddItem = () => {
+        let newItem: PackageItem | null = null;
+
+        if (itemType === 'product') {
+            // Adding a product from catalog
+            if (!selectedProductId) {
+                toast({ title: 'Erro', description: 'Selecione um produto', variant: 'destructive' });
+                return;
+            }
+
+            const product = availableProducts.find(p => p.id === selectedProductId);
+            if (!product) return;
+
+            // Check if product already added
+            if (form.items.some(item => item.type === 'product' && item.productId === selectedProductId)) {
+                toast({
+                    title: 'Produto já adicionado',
+                    description: 'Este produto já está no pacote',
+                    variant: 'destructive'
+                });
+                return;
+            }
+
+            const price = product.preco_diario || 0;
+            newItem = {
+                id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                type: 'product',
+                productId: product.id,
+                productName: product.name,
+                productPrice: price,
+                quantity: productQuantity,
+                subtotal: price * productQuantity
+            };
+
+        } else {
+            // Adding a custom item
+            if (!customItemName.trim()) {
+                toast({ title: 'Erro', description: 'Digite o nome do item', variant: 'destructive' });
+                return;
+            }
+            if (!customItemPrice || parseFloat(customItemPrice) <= 0) {
+                toast({ title: 'Erro', description: 'Digite um preço válido', variant: 'destructive' });
+                return;
+            }
+
+            const price = parseFloat(customItemPrice);
+            newItem = {
+                id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                type: 'custom',
+                customName: customItemName,
+                customPrice: price,
+                quantity: customItemQuantity,
+                subtotal: price * customItemQuantity
+            };
+        }
+
+        const newItems = [...form.items, newItem];
+
+        // Recalculate individual total
+        const individualTotal = newItems.reduce((sum, item) => sum + item.subtotal, 0);
+
+        setForm(prev => ({
+            ...prev,
+            items: newItems,
+            individualTotal: individualTotal.toString()
+        }));
+
+        // Reset form
+        setSelectedProductId('');
+        setProductQuantity(1);
+        setCustomItemName('');
+        setCustomItemPrice('');
+        setCustomItemQuantity(1);
+    };
+
+    const handleRemoveItem = (itemId: string) => {
+        const newItems = form.items.filter(item => item.id !== itemId);
+
+        const individualTotal = newItems.reduce((sum, item) => sum + item.subtotal, 0);
+
+        setForm(prev => ({
+            ...prev,
+            items: newItems,
+            individualTotal: individualTotal.toString()
+        }));
+    };

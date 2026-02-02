@@ -1,0 +1,36 @@
+// CORREÇÃO PARA HOME.TSX
+// Substituir as linhas 92-115 por este código:
+
+const produtosFormatados: Produto[] = querySnapshot.docs.map(doc => {
+  const data = doc.data();
+  
+  // BOS rental_equipments: accessories são ITENS INCLUSOS, não o produto
+  const accessories = data.accessories || [];
+  
+  // NOME: vem de tags[0] (ex: "UTS 500 - UNIVERSAL")
+  const nome = (data.tags && data.tags.length > 0) 
+    ? data.tags[0] 
+    : "Equipamento";
+  
+  // PREÇO: campo rentPrice na raiz do documento
+  const dailyRate = data.rentPrice || 0;
+  
+  // STATUS: BOS usa "AVAILABLE" (maiúsculo)
+  const status = data.status === 'AVAILABLE' ? 'available' : 'unavailable';
+  
+  return {
+    id: doc.id,
+    nome: nome,                                          // tags[0] ← CORRETO
+    descricao: data.description || data.notes || "",
+    imagem: accessories[0]?.imageUrl || null,           // Imagem do primeiro acessório (OK)
+    preco_diario: dailyRate,                            // rentPrice ← CORRETO
+    preco_mensal: data.monthlyRate || null,
+    status: status,                                      //AVAILABLE→available ← CORRETO
+    especificacoes: data.specifications || [],
+    created_at: data.createdAt?.toString() || new Date().toISOString(),
+    category: data.category || '',
+    updated_at: new Date().toISOString()
+  };
+});
+
+return produtosFormatados;

@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Check, Info, Loader2, AlertCircle, CheckCircle, Clock, Wrench, ShoppingCart, Calendar, ChevronLeft, FileText, ArrowUpCircle } from 'lucide-react';
+import { ArrowLeft, Check, Info, Loader2, AlertCircle, CheckCircle, Clock, Wrench, ShoppingCart, Calendar, ChevronLeft, FileText, ArrowUpCircle, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +29,13 @@ interface ProdutoDetalhe {
   preco_diario: number;
   status: 'available' | 'rented' | 'maintenance' | 'disponivel' | 'alugado' | 'manutencao' | 'sold' | 'vendido';
   especificacoes: string[];
+  category?: string;
+  categoryName?: string;
+  accessories?: Array<{
+    id: string;
+    name: string;
+    imageUrl: string;
+  }>;
   commercial?: {
     isForSale: boolean;
     salePrice: number | null;
@@ -102,12 +109,15 @@ const ProdutoDetalhes = () => {
       // Mapeamento BOS → EXS
       return {
         id: docSnap.id,
-        nome: data.name || "Equipamento",  // BOS usa 'name'
+        nome: data.name || "Equipamento",
         descricao: data.description || data.notes || "",
-        imagem: data.accessories?.[0]?.imageUrl || null,  // Imagem do primeiro acessório
-        preco_diario: data.rentPrice || 0,  // BOS usa 'rentPrice'
+        imagem: data.imageUrl || data.accessories?.[0]?.imageUrl || null,
+        preco_diario: data.rentPrice || 0,
         status: data.status === 'AVAILABLE' ? 'available' : 'unavailable',
         especificacoes: data.specifications || [],
+        category: data.category || null,
+        categoryName: data.categoryName || null,
+        accessories: data.accessories || [],  // Acessórios do BOS
         commercial: {
           isForSale: false,
           salePrice: null,
@@ -118,6 +128,18 @@ const ProdutoDetalhes = () => {
       } as ProdutoDetalhe;
     },
     enabled: !!id
+  });
+
+  // Buscar informações da categoria se o produto tiver uma
+  const { data: categoryInfo } = useQuery({
+    queryKey: ['category', produto?.category],
+    queryFn: async () => {
+      if (!produto?.category) return null;
+      const categoryRef = doc(db, 'categories', produto.category);
+      const categorySnap = await getDoc(categoryRef);
+      return categorySnap.exists() ? { id: categorySnap.id, ...categorySnap.data() } : null;
+    },
+    enabled: !!produto?.category
   });
 
   useEffect(() => {
@@ -159,6 +181,60 @@ const ProdutoDetalhes = () => {
     enabled: !!id
   });
 
+  // Buscar TODAS as unidades físicas deste produto (mesmo nome)
+  const { data: allProductUnits = [] } = useQuery({
+    queryKey: ['product-units', produto?.nome],
+    queryFn: async () => {
+      if (!produto?.nome) return [];
+
+      const q = query(
+        collection(db, 'rental_equipments'),
+        where('name', '==', produto.nome)
+      );
+
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as any[];
+    },
+    enabled: !!produto?.nome
+  });
+
+  // Buscar reservas de TODAS as unidades deste produto
+  const { data: allUnitsReservations = [] } = useQuery({
+    queryKey: ['all-units-reservations', allProductUnits.map(u => u.id)],
+    queryFn: async () => {
+      if (!allProductUnits.length) return [];
+
+      const unitIds = allProductUnits.map(u => u.id);
+      const reservasRef = collection(db, 'reservas');
+
+      // Firestore 'in' suporta até 10 valores, se tiver mais precisa dividir
+      const chunks = [];
+      for (let i = 0; i < unitIds.length; i += 10) {
+        chunks.push(unitIds.slice(i, i + 10));
+      }
+
+      const allReservations = [];
+      for (const chunk of chunks) {
+        const q = query(
+          reservasRef,
+          where('produto_id', 'in', chunk),
+          where('status', 'in', ['pending', 'pending_approval', 'confirmed', 'confirmada', 'approved', 'rented'])
+        );
+        const snapshot = await getDocs(q);
+        allReservations.push(...snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })));
+      }
+
+      return allReservations as any[];
+    },
+    enabled: allProductUnits.length > 0
+  });
+
   // Fetch Upgrade Promotions for this product
   const { data: upgradePromotion } = useQuery({
     queryKey: ['upgrade-promo', id],
@@ -178,6 +254,29 @@ const ProdutoDetalhes = () => {
   });
 
 
+
+  // Buscar produtos da mesma categoria (relacionados)
+  const { data: relatedProducts = [] } = useQuery({
+    queryKey: ['related-products', produto?.category, produto?.id],
+    queryFn: async () => {
+      if (!produto?.category || !produto?.id) return [];
+
+      const q = query(
+        collection(db, 'rental_equipments'),
+        where('category', '==', produto.category),
+        limit(6) // Limitar a 6 produtos relacionados
+      );
+
+      const snapshot = await getDocs(q);
+      return snapshot.docs
+        .map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }))
+        .filter(p => p.id !== produto.id); // Excluir o produto atual
+    },
+    enabled: !!produto?.category && !!produto?.id
+  });
 
   const diasLocacao = useMemo(() => {
     if (!dataInicio || !dataFim) return 0;
@@ -288,6 +387,31 @@ const ProdutoDetalhes = () => {
     }
     setDataFim(date);
   };
+
+  // Calcular quantas unidades estão disponíveis no período selecionado
+  const maxAvailableUnits = useMemo(() => {
+    if (!dataInicio || !dataFim || allProductUnits.length === 0) {
+      return allProductUnits.length || 1; // Se não tem período, retorna total de unidades
+    }
+
+    // Contar quantas unidades estão ocupadas no período
+    const occupiedUnits = new Set<string>();
+
+    allUnitsReservations.forEach((reserva: any) => {
+      const rStart = parseISO(reserva.data_inicio);
+      const rEnd = parseISO(reserva.data_fim);
+
+      // Verificar overlap
+      const hasOverlap = (dataInicio <= rEnd) && (dataFim >= rStart);
+
+      if (hasOverlap) {
+        occupiedUnits.add(reserva.produto_id);
+      }
+    });
+
+    const availableCount = allProductUnits.length - occupiedUnits.size;
+    return Math.max(0, availableCount);
+  }, [dataInicio, dataFim, allProductUnits, allUnitsReservations]);
 
   const hasOverlap = useMemo(() => {
     if (!dataInicio || !dataFim || !reservas.length) return false;
@@ -409,8 +533,19 @@ const ProdutoDetalhes = () => {
           <Card className="border-border/50 shadow-md rounded-none">
             <CardHeader className="pb-4">
               <div className="flex items-start justify-between gap-4">
-                <div>
+                <div className="flex-1">
                   <CardTitle className="text-2xl mb-2">{produto.nome}</CardTitle>
+
+                  {/* Categoria do Produto */}
+                  {(categoryInfo || produto.categoryName) && (
+                    <div className="mb-3 flex items-center gap-2">
+                      <Badge variant="secondary" className="gap-1.5 px-3 py-1 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20">
+                        <Tag className="h-3.5 w-3.5" />
+                        {categoryInfo?.name || produto.categoryName}
+                      </Badge>
+                    </div>
+                  )}
+
                   <p className="text-muted-foreground leading-relaxed">{produto.descricao}</p>
                 </div>
               </div>
@@ -440,6 +575,39 @@ const ProdutoDetalhes = () => {
                   <p className="text-sm text-slate-400 italic">Nenhuma especificação cadastrada.</p>
                 )}
               </div>
+
+              {/* Acessórios Inclusos */}
+              {produto.accessories && produto.accessories.length > 0 && (
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-lg flex items-center gap-2">
+                    <Check className="w-5 h-5 text-primary" />
+                    Acompanham o equipamento
+                  </h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    {produto.accessories.map((accessory) => (
+                      <div
+                        key={accessory.id}
+                        className="flex flex-col items-center gap-2 p-3 rounded-lg border border-border/50 bg-white hover:border-primary/30 hover:shadow-md transition-all"
+                      >
+                        <div className="w-16 h-16 rounded-md overflow-hidden bg-white flex items-center justify-center">
+                          {accessory.imageUrl ? (
+                            <img
+                              src={accessory.imageUrl}
+                              alt={accessory.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="text-slate-400 text-xs">Sem imagem</div>
+                          )}
+                        </div>
+                        <span className="text-xs text-center text-slate-700 line-clamp-2 font-medium">
+                          {accessory.name}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {produto.technical?.catalogUrl && (
                 <div className="pt-4 border-t border-border">
@@ -658,6 +826,7 @@ const ProdutoDetalhes = () => {
                         size="icon"
                         className="h-8 w-8 rounded-none border-white/10 hover:bg-white/5"
                         onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                        disabled={quantity <= 1}
                       >
                         -
                       </Button>
@@ -666,11 +835,18 @@ const ProdutoDetalhes = () => {
                         variant="outline"
                         size="icon"
                         className="h-8 w-8 rounded-none border-white/10 hover:bg-white/5"
-                        onClick={() => setQuantity(quantity + 1)}
+                        onClick={() => setQuantity(Math.min(maxAvailableUnits, quantity + 1))}
+                        disabled={quantity >= maxAvailableUnits}
                       >
                         +
                       </Button>
                     </div>
+                    {/* Disponibilidade oculta para clientes - sistema rastreia internamente */}
+                    {/* allProductUnits.length > 1 && (
+                      <span className="text-xs text-slate-400">
+                        Máx: {maxAvailableUnits} de {allProductUnits.length} disponíveis
+                      </span>
+                    ) */}
                   </div>
 
                   <Button
@@ -784,6 +960,7 @@ const ProdutoDetalhes = () => {
                     size="icon"
                     className="h-14 w-14 rounded-none border-white/10 hover:bg-white/5 text-white text-2xl"
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    disabled={quantity <= 1}
                   >
                     -
                   </Button>
@@ -792,7 +969,8 @@ const ProdutoDetalhes = () => {
                     variant="outline"
                     size="icon"
                     className="h-14 w-14 rounded-none border-white/10 hover:bg-white/5 text-white text-2xl"
-                    onClick={() => setQuantity(quantity + 1)}
+                    onClick={() => setQuantity(Math.min(allProductUnits.length || 99, quantity + 1))}
+                    disabled={quantity >= (allProductUnits.length || 99)}
                   >
                     +
                   </Button>

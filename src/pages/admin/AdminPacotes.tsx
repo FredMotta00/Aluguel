@@ -57,6 +57,25 @@ import {
     X
 } from 'lucide-react';
 
+interface PackageItem {
+    id: string;                    // UUID único para o item
+    type: 'product' | 'custom';    // Tipo do item
+
+    // Para produtos (type = 'product')
+    productId?: string;            // ID do produto no Firestore
+    productName?: string;          // Nome do produto
+    productPrice?: number;         // Preço do produto (cached)
+
+    // Para itens customizados (type = 'custom')
+    customName?: string;           // Nome customizado
+    customPrice?: number;          // Preço customizado
+
+    // Comum a ambos
+    quantity: number;              // Quantidade
+    subtotal: number;              // Preço × Quantidade
+}
+
+// Legacy support for old packages
 interface PackageProduct {
     productId: string;
     productName: string;
@@ -67,7 +86,8 @@ interface Package {
     id: string;
     name: string;
     description: string;
-    products: PackageProduct[];
+    items?: PackageItem[];          // New format
+    products?: PackageProduct[];    // Legacy support
     pricing: {
         individualTotal: number;
         packagePrice: number;
@@ -84,7 +104,7 @@ interface Package {
 interface PackageForm {
     name: string;
     description: string;
-    products: PackageProduct[];
+    items: PackageItem[];           // Changed from products to items
     individualTotal: string;
     packagePrice: string;
     discount: string;
@@ -96,7 +116,7 @@ interface PackageForm {
 const initialForm: PackageForm = {
     name: '',
     description: '',
-    products: [],
+    items: [],              // Changed from products to items
     individualTotal: '0',
     packagePrice: '0',
     discount: '0',
@@ -117,6 +137,12 @@ export default function AdminPacotes() {
     // Product selection states
     const [selectedProductId, setSelectedProductId] = useState<string>('');
     const [productQuantity, setProductQuantity] = useState<number>(1);
+
+    // Custom item states
+    const [itemType, setItemType] = useState<'product' | 'custom'>('product');
+    const [customItemName, setCustomItemName] = useState<string>('');
+    const [customItemPrice, setCustomItemPrice] = useState<string>('');
+    const [customItemQuantity, setCustomItemQuantity] = useState<number>(1);
 
     const { toast } = useToast();
     const queryClient = useQueryClient();
@@ -160,58 +186,89 @@ export default function AdminPacotes() {
         }
     };
 
-    const handleAddProduct = () => {
-        if (!selectedProductId) return;
+    const handleAddItem = () => {
+        let newItem: PackageItem | null = null;
 
-        const product = availableProducts.find(p => p.id === selectedProductId);
-        if (!product) return;
+        if (itemType === 'product') {
+            // Adding a product from catalog
+            if (!selectedProductId) {
+                toast({ title: 'Erro', description: 'Selecione um produto', variant: 'destructive' });
+                return;
+            }
 
-        // Check if already added
-        if (form.products.some(p => p.productId === selectedProductId)) {
-            toast({
-                title: 'Produto já adicionado',
-                description: 'Este produto já está no pacote',
-                variant: 'destructive'
-            });
-            return;
-        }
+            const product = availableProducts.find(p => p.id === selectedProductId);
+            if (!product) return;
 
-        const newProducts = [
-            ...form.products,
-            {
+            // Check if product already added
+            if (form.items.some(item => item.type === 'product' && item.productId === selectedProductId)) {
+                toast({
+                    title: 'Produto já adicionado',
+                    description: 'Este produto já está no pacote',
+                    variant: 'destructive'
+                });
+                return;
+            }
+
+            const price = product.preco_diario || 0;
+            newItem = {
+                id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                type: 'product',
                 productId: product.id,
                 productName: product.name,
-                quantity: productQuantity
+                productPrice: price,
+                quantity: productQuantity,
+                subtotal: price * productQuantity
+            };
+
+        } else {
+            // Adding a custom item
+            if (!customItemName.trim()) {
+                toast({ title: 'Erro', description: 'Digite o nome do item', variant: 'destructive' });
+                return;
             }
-        ];
+            if (!customItemPrice || parseFloat(customItemPrice) <= 0) {
+                toast({ title: 'Erro', description: 'Digite um preço válido', variant: 'destructive' });
+                return;
+            }
+
+            const price = parseFloat(customItemPrice);
+            newItem = {
+                id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                type: 'custom',
+                customName: customItemName,
+                customPrice: price,
+                quantity: customItemQuantity,
+                subtotal: price * customItemQuantity
+            };
+        }
+
+        const newItems = [...form.items, newItem];
 
         // Recalculate individual total
-        const individualTotal = newProducts.reduce((sum, p) => {
-            const prod = availableProducts.find(ap => ap.id === p.productId);
-            return sum + (prod?.preco_diario || 0) * p.quantity;
-        }, 0);
+        const individualTotal = newItems.reduce((sum, item) => sum + item.subtotal, 0);
 
         setForm(prev => ({
             ...prev,
-            products: newProducts,
+            items: newItems,
             individualTotal: individualTotal.toString()
         }));
 
+        // Reset form
         setSelectedProductId('');
         setProductQuantity(1);
+        setCustomItemName('');
+        setCustomItemPrice('');
+        setCustomItemQuantity(1);
     };
 
-    const handleRemoveProduct = (productId: string) => {
-        const newProducts = form.products.filter(p => p.productId !== productId);
+    const handleRemoveItem = (itemId: string) => {
+        const newItems = form.items.filter(item => item.id !== itemId);
 
-        const individualTotal = newProducts.reduce((sum, p) => {
-            const prod = availableProducts.find(ap => ap.id === p.productId);
-            return sum + (prod?.preco_diario || 0) * p.quantity;
-        }, 0);
+        const individualTotal = newItems.reduce((sum, item) => sum + item.subtotal, 0);
 
         setForm(prev => ({
             ...prev,
-            products: newProducts,
+            items: newItems,
             individualTotal: individualTotal.toString()
         }));
     };
@@ -238,7 +295,7 @@ export default function AdminPacotes() {
             const payload: any = {
                 name: data.name,
                 description: data.description,
-                products: data.products,
+                items: data.items,
                 pricing: {
                     individualTotal: parseFloat(data.individualTotal),
                     packagePrice: parseFloat(data.packagePrice),
@@ -296,7 +353,7 @@ export default function AdminPacotes() {
         setForm({
             name: pkg.name,
             description: pkg.description,
-            products: pkg.products || [],
+            items: pkg.items || pkg.products || [],  // Support legacy format
             individualTotal: String(pkg.pricing?.individualTotal || 0),
             packagePrice: String(pkg.pricing?.packagePrice || 0),
             discount: String(pkg.pricing?.discount || 0),
@@ -332,8 +389,8 @@ export default function AdminPacotes() {
             toast({ title: 'Erro', description: 'O nome é obrigatório', variant: 'destructive' });
             return;
         }
-        if (form.products.length === 0) {
-            toast({ title: 'Erro', description: 'Adicione pelo menos 1 produto', variant: 'destructive' });
+        if (form.items.length === 0) {
+            toast({ title: 'Erro', description: 'Adicione pelo menos 1 item', variant: 'destructive' });
             return;
         }
         if (!form.packagePrice || parseFloat(form.packagePrice) === 0) {
@@ -525,50 +582,117 @@ export default function AdminPacotes() {
 
                         {/* Product Selection */}
                         <div className="space-y-2 border border-white/10 p-4 rounded-none bg-white/5">
-                            <h4 className="text-sm font-semibold text-white mb-2">Produtos do Pacote</h4>
+                            <h4 className="text-sm font-semibold text-white mb-3">Items do Pacote</h4>
 
-                            <div className="grid grid-cols-3 gap-2 mb-4">
-                                <Select value={selectedProductId} onValueChange={setSelectedProductId}>
-                                    <SelectTrigger className="col-span-2">
-                                        <SelectValue placeholder="Selecione um produto" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {availableProducts.map((prod: any) => (
-                                            <SelectItem key={prod.id} value={prod.id}>
-                                                {prod.name} - R$ {prod.preco_diario}/dia
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <div className="flex gap-2">
-                                    <Input
-                                        type="number"
-                                        min="1"
-                                        value={productQuantity}
-                                        onChange={(e) => setProductQuantity(parseInt(e.target.value) || 1)}
-                                        placeholder="Qtd"
-                                        className="w-20"
-                                    />
-                                    <Button type="button" onClick={handleAddProduct} size="sm">
-                                        <Plus className="h-4 w-4" />
-                                    </Button>
-                                </div>
+                            {/* Item Type Toggle */}
+                            <div className="flex gap-2 mb-4">
+                                <Button
+                                    type="button"
+                                    variant={itemType === 'product' ? 'default' : 'outline'}
+                                    size="sm"
+                                    onClick={() => setItemType('product')}
+                                    className="flex-1"
+                                >
+                                    📦 Produto
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant={itemType === 'custom' ? 'default' : 'outline'}
+                                    size="sm"
+                                    onClick={() => setItemType('custom')}
+                                    className="flex-1"
+                                >
+                                    ⚙️ Item Customizado
+                                </Button>
                             </div>
 
+                            {/* Custom Item Form */}
+                            {itemType === 'custom' && (
+                                <div className="space-y-3 mb-4">
+                                    <Input
+                                        placeholder="Nome do item (ex: Cabo USB, Treinamento)"
+                                        value={customItemName}
+                                        onChange={(e) => setCustomItemName(e.target.value)}
+                                    />
+                                    <div className="grid grid-cols-3 gap-2">
+                                        <Input
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            placeholder="Preço (R$)"
+                                            value={customItemPrice}
+                                            onChange={(e) => setCustomItemPrice(e.target.value)}
+                                            className="col-span-2"
+                                        />
+                                        <div className="flex gap-2">
+                                            <Input
+                                                type="number"
+                                                min="1"
+                                                value={customItemQuantity}
+                                                onChange={(e) => setCustomItemQuantity(parseInt(e.target.value) || 1)}
+                                                placeholder="Qtd"
+                                                className="w-20"
+                                            />
+                                            <Button type="button" onClick={handleAddItem} size="sm">
+                                                <Plus className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Product Selection Form */}
+                            {itemType === 'product' && (
+                                <div className="grid grid-cols-3 gap-2 mb-4">
+                                    <Select value={selectedProductId} onValueChange={setSelectedProductId}>
+                                        <SelectTrigger className="col-span-2">
+                                            <SelectValue placeholder="Selecione um produto" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {availableProducts.map((prod: any) => (
+                                                <SelectItem key={prod.id} value={prod.id}>
+                                                    {prod.name} - R$ {prod.preco_diario}/dia
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <div className="flex gap-2">
+                                        <Input
+                                            type="number"
+                                            min="1"
+                                            value={productQuantity}
+                                            onChange={(e) => setProductQuantity(parseInt(e.target.value) || 1)}
+                                            placeholder="Qtd"
+                                            className="w-20"
+                                        />
+                                        <Button type="button" onClick={handleAddItem} size="sm">
+                                            <Plus className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Selected Products List */}
-                            {form.products.length > 0 ? (
+                            {form.items.length > 0 ? (
                                 <div className="space-y-2">
-                                    {form.products.map((p, idx) => (
+                                    {form.items.map((item, idx) => (
                                         <div key={idx} className="flex items-center justify-between bg-slate-900/50 p-2 rounded">
-                                            <span className="text-sm text-white">
-                                                {p.productName} x {p.quantity}
-                                            </span>
+                                            <div className="flex items-center gap-2">
+                                                {item.type === 'product' ? (
+                                                    <span className="text-xs">📦</span>
+                                                ) : (
+                                                    <span className="text-xs">⚙️</span>
+                                                )}
+                                                <span className="text-sm text-white">
+                                                    {item.type === 'product' ? item.productName : item.customName} x {item.quantity}
+                                                </span>
+                                            </div>
                                             <Button
                                                 type="button"
                                                 size="icon"
                                                 variant="ghost"
                                                 className="h-6 w-6"
-                                                onClick={() => handleRemoveProduct(p.productId)}
+                                                onClick={() => handleRemoveItem(item.id)}
                                             >
                                                 <X className="h-4 w-4" />
                                             </Button>

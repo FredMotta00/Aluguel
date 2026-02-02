@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-// 👇 Trocamos o cliente do Supabase pelo nosso do Firebase
+// 👇 Troc amos o cliente do Supabase pelo nosso do Firebase
 import { auth, db } from '@/lib/firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDocs, query, where, collection } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -50,7 +50,7 @@ const Auth = () => {
 
   // 👇 Validação de CNPJ
   const validateCNPJ = async (docValue: string) => {
-    const numbers = docValue.replace(/\D/g, '');
+    const numbers = docValue.replace(/\\D/g, '');
 
     // Se não for CNPJ (14 dígitos), reseta e retorna (pode ser CPF)
     if (numbers.length !== 14) {
@@ -85,8 +85,7 @@ const Auth = () => {
       }
     } catch (error) {
       console.error("Erro ao validar CNPJ:", error);
-      // Em caso de erro na API, não bloqueamos, mas avisamos (ou consideramos inválido dependendo da regra)
-      // Aqui vou considerar inválido para forçar atenção, mas você pode mudar
+      // Em caso de erro na API, não bloqueamos, mas avisamos
       setCnpjStatus('invalid');
       toast.error('Não foi possível validar este CNPJ.');
     } finally {
@@ -115,35 +114,60 @@ const Auth = () => {
     }
   };
 
-  // 👇 Lógica de Cadastro (Firebase Auth + Firestore)
+  // 👇 Lógica de Cadastro (Firebase Auth + Firestore) - COM LOGS
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('🚀 Iniciando cadastro...');
 
-    // Bloqueia se CNPJ for inválido (opcional: remova se quiser permitir mesmo com erro na API)
-    if (cnpjStatus === 'invalid') {
+    // Só bloqueia se for CNPJ (14 dígitos) E estiver inválido
+    // CPF (11 dígitos) pode prosseguir normalmente
+    const documentoNumeros = signupDocumento.replace(/\\D/g, '');
+    console.log('📄 Documento:', documentoNumeros, 'Length:', documentoNumeros.length);
+
+    if (documentoNumeros.length === 14 && cnpjStatus === 'invalid') {
+      console.log('❌ Bloqueado: CNPJ inválido');
       toast.error('Por favor, corrija o CNPJ antes de continuar.');
       return;
     }
 
     if (signupPassword !== signupConfirmPassword) {
+      console.log('❌ Bloqueado: Senhas não coincidem');
       toast.error('As senhas não coincidem');
       return;
     }
 
     if (signupPassword.length < 6) {
+      console.log('❌ Bloqueado: Senha muito curta');
       toast.error('A senha deve ter pelo menos 6 caracteres');
       return;
     }
 
+    console.log('✅ Validações iniciais OK');
     setLoading(true);
 
     try {
-      // 1. Cria o usuário na Autenticação
+      console.log('🔐 Criando usuário no Firebase Auth...');
+
+      // 1. Cria o usuário na Autenticação (Firebase já valida email duplicado)
       const userCredential = await createUserWithEmailAndPassword(auth, signupEmail, signupPassword);
       const user = userCredential.user;
+      console.log('✅ Usuário criado no Auth:', user.uid);
 
-      // 2. Salva os dados do cliente no Firestore (BOS compatible)
-      // Criamos APENAS em 'customers' (compartilhada com BOS)
+      // 2. Agora autenticado, verifica se CPF/CNPJ já existe
+      console.log('🔍 Verificando se CPF/CNPJ já existe...');
+      const qCpf = query(collection(db, "customers"), where("cpfCnpj", "==", signupDocumento));
+      const querySnapshotCpf = await getDocs(qCpf);
+
+      if (!querySnapshotCpf.empty) {
+        console.log('❌ CPF/CNPJ já existe! Deletando usuário criado...');
+        // Deleta o usuário recém-criado
+        await user.delete();
+        toast.error("Este CPF/CNPJ já está cadastrado.");
+        setLoading(false);
+        return;
+      }
+
+      // 3. Salva os dados do cliente no Firestore
       const customerData = {
         uid: user.uid,
         email: signupEmail,
@@ -158,52 +182,59 @@ const Auth = () => {
         roleId: 'CUSTOMER'
       };
 
-      // Salva na collection 'customers' (compartilhada com BOS)
+      console.log('💾 Salvando dados no Firestore...');
       await setDoc(doc(db, "customers", user.uid), customerData);
+      console.log('✅ Dados salvos com sucesso!');
 
       toast.success('Cadastro realizado com sucesso!');
       // O onAuthStateChanged vai redirecionar automaticamente
     } catch (error: any) {
-      console.error(error);
+      console.error('❌ Erro durante cadastro:', error);
+      console.error('Error code:', error.code);
+      console.error('Error message:', error.message);
+
       if (error.code === 'auth/email-already-in-use') {
         toast.error('Este e-mail já está cadastrado');
+      } else if (error.code === 'permission-denied') {
+        toast.error('Erro de permissão no banco de dados. Contate o suporte.');
       } else {
         toast.error('Erro ao criar conta: ' + error.message);
       }
     } finally {
       setLoading(false);
+      console.log('🏁 Processo de cadastro finalizado');
     }
   };
 
   // 👇 Funções utilitárias mantidas idênticas
   const formatDocumento = (value: string) => {
-    const numbers = value.replace(/\D/g, '');
+    const numbers = value.replace(/\\D/g, '');
     if (numbers.length <= 11) {
       // CPF: 000.000.000-00
       return numbers
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+        .replace(/(\\d{3})(\\d)/, '$1.$2')
+        .replace(/(\\d{3})(\\d)/, '$1.$2')
+        .replace(/(\\d{3})(\\d{1,2})$/, '$1-$2');
     } else {
       // CNPJ: 00.000.000/0000-00
       return numbers
-        .replace(/(\d{2})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d)/, '$1/$2')
-        .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+        .replace(/(\\d{2})(\\d)/, '$1.$2')
+        .replace(/(\\d{3})(\\d)/, '$1.$2')
+        .replace(/(\\d{3})(\\d)/, '$1/$2')
+        .replace(/(\\d{4})(\\d{1,2})$/, '$1-$2');
     }
   };
 
   const formatTelefone = (value: string) => {
-    const numbers = value.replace(/\D/g, '');
+    const numbers = value.replace(/\\D/g, '');
     if (numbers.length <= 10) {
       return numbers
-        .replace(/(\d{2})(\d)/, '($1) $2')
-        .replace(/(\d{4})(\d)/, '$1-$2');
+        .replace(/(\\d{2})(\\d)/, '($1) $2')
+        .replace(/(\\d{4})(\\d)/, '$1-$2');
     } else {
       return numbers
-        .replace(/(\d{2})(\d)/, '($1) $2')
-        .replace(/(\d{5})(\d)/, '$1-$2');
+        .replace(/(\\d{2})(\\d)/, '($1) $2')
+        .replace(/(\\d{5})(\\d)/, '$1-$2');
     }
   };
 

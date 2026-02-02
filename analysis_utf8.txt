@@ -1,0 +1,238 @@
+
+==========================================
+?? DOCUMENTO 1
+==========================================
+ID: CKvV7HGKmTj3UzK7uGKP
+
+?? ESTRUTURA COMPLETA (JSON):
+{
+  "manufactureDate": 1767484800000,
+  "status": "AVAILABLE",
+  "certificates": [],
+  "accessories": [
+    {
+      "id": "1768336615933",
+      "name": "Case de Transporte",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comexs-r1g97.firebasestorage.app/o/Imagens%20Acess%C3%B3rios%20UTS%2FCase.png?alt=media&token=7359464f-0a28-4757-8181-eea132fea06c"
+    },
+    {
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comexs-r1g97.firebasestorage.app/o/Imagens%20Acess%C3%B3rios%20UTS%2FKit%20de%20Cabos%20de%20Teste.png?alt=media&token=e80d0ce2-cc0d-4f77-ac2c-3edfa365660a",
+      "id": "1768337014544",
+      "name": " Kit de Cabos de Teste "
+    },
+    {
+      "id": "1768337062972",
+      "name": " Kit de Conectores Variados",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comexs-r1g97.firebasestorage.app/o/Imagens%20Acess%C3%B3rios%20UTS%2FKit%20de%20Conectores.png?alt=media&token=f739ddb0-c003-48c3-bf83-1886a412f959"
+    },
+    {
+      "name": " Pendrive",
+      "id": "1768337121144",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comexs-r1g97.firebasestorage.app/o/Imagens%20Acess%C3%B3rios%20UTS%2FPendrive.png?alt=media&token=f15f1390-bca0-4fce-b81c-a90942a0235e"
+    },
+    {
+      "id": "1768337243385",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comexs-r1g97.firebasestorage.app/o/Imagens%20Acess%C3%B3rios%20UTS%2FCabo%20de%20Rede%20Ethernet%20RJ45.png?alt=media&token=68625816-0ee9-456b-921c-c26b150fbd65",
+      "name": " Cabo Ethernet RJ45"
+    },
+    {
+      "name": " Cabo de Aterramento",
+      "id": "1768337274705",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comexs-r1g97.firebasestorage.app/o/Imagens%20Acess%C3%B3rios%20UTS%2FCabo%20terra.png?alt=media&token=fdde71e8-3f31-416c-9c69-9ba229d89c0a"
+    },
+    {
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comexs-r1g97.firebasestorage.app/o/Imagens%20Acess%C3%B3rios%20UTS%2FUTS%20500%20CONTROL%20CENTER.png?alt=media&token=51f099a2-c6c9-41da-8887-cb4527f3ecce",
+      "id": "1768337473235",
+      "name": " Licen?a Pacote Avan?ado de Software - UTS 500"
+    },
+    {
+      "name": " Fonte AC",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comexs-r1g97.firebasestorage.app/o/Imagens%20Acess%C3%B3rios%20UTS%2FFonte%20AC.png?alt=media&token=52ee2292-a6fd-4d51-9083-f73e6b3647d0",
+      "id": "1768344044034"
+    },
+    {
+      "id": "1768344141527",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comexs-r1g97.firebasestorage.app/o/Imagens%20Acess%C3%B3rios%20UTS%2FSuporte%20de%20Apoio.png?alt=media&token=33d0724c-b462-40b3-b79b-e6a5afaa3aaa",
+      "name": " Suporte de Mesa"
+    }
+  ],
+  "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comexs-r1g97.firebasestorage.app/o/Imagens%20Acess%C3%B3rios%20UTS%2FUTS%20500.png?alt=media&token=12dfa7f8-7f42-4ef3-9eea-650eb2313b54",
+  "categoryId": "XlSjrfilepIJvb71gL26",
+  "createdAt": 1768344545170,
+  "tags": [
+    "Caixa Trif?sica",
+    "Port?til",
+    "10A"
+  ],
+  "firmwareVersion": "N/A",
+  "lastCalibrationDate": 1767744000000,
+  "serialNumber": "203091214",
+  "categoryName": "Universal Test Set",
+  "name": "UTS 500 - UNIVERSAL TEST SET",
+  "softwareVersion": "N/A",
+  "notes": "",
+  "name_lower": "uts 500 - universal test set",
+  "includedSoftware": "",
+  "rentPrice": 450
+}
+
+==========================================
+
+==========================================
+?? DOCUMENTO 2
+==========================================
+ID: Co6wCJ8JHdyrC8VOSbCW
+
+?? ESTRUTURA COMPLETA (JSON):
+{
+  "name": "UTS 500 - UNIVERSAL TEST SET",
+  "serialNumber": "203091216",
+  "rentPrice": 450,
+  "lastCalibrationDate": 1768176000000,
+  "tags": [
+    "Caixa Trif?sica",
+    "Port?til",
+    "20A"
+  ],
+  "firmwareVersion": "N/A",
+  "accessories": [
+    {
+      "name": "Case de Transporte",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comexs-r1g97.firebasestorage.app/o/Imagens%20Acess%C3%B3rios%20UTS%2FCase.png?alt=media&token=7359464f-0a28-4757-8181-eea132fea06c",
+      "id": "1768336615933"
+    },
+    {
+      "name": " Kit de Cabos de Teste ",
+      "id": "1768337014544",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comexs-r1g97.firebasestorage.app/o/Imagens%20Acess%C3%B3rios%20UTS%2FKit%20de%20Cabos%20de%20Teste.png?alt=media&token=e80d0ce2-cc0d-4f77-ac2c-3edfa365660a"
+    },
+    {
+      "name": " Kit de Conectores Variados",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comexs-r1g97.firebasestorage.app/o/Imagens%20Acess%C3%B3rios%20UTS%2FKit%20de%20Conectores.png?alt=media&token=f739ddb0-c003-48c3-bf83-1886a412f959",
+      "id": "1768337062972"
+    },
+    {
+      "id": "1768337121144",
+      "name": " Pendrive",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comexs-r1g97.firebasestorage.app/o/Imagens%20Acess%C3%B3rios%20UTS%2FPendrive.png?alt=media&token=f15f1390-bca0-4fce-b81c-a90942a0235e"
+    },
+    {
+      "name": " Cabo Ethernet RJ45",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comexs-r1g97.firebasestorage.app/o/Imagens%20Acess%C3%B3rios%20UTS%2FCabo%20de%20Rede%20Ethernet%20RJ45.png?alt=media&token=68625816-0ee9-456b-921c-c26b150fbd65",
+      "id": "1768337243385"
+    },
+    {
+      "name": " Cabo de Aterramento",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comexs-r1g97.firebasestorage.app/o/Imagens%20Acess%C3%B3rios%20UTS%2FCabo%20terra.png?alt=media&token=fdde71e8-3f31-416c-9c69-9ba229d89c0a",
+      "id": "1768337274705"
+    },
+    {
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comexs-r1g97.firebasestorage.app/o/Imagens%20Acess%C3%B3rios%20UTS%2FUTS%20500%20CONTROL%20CENTER.png?alt=media&token=51f099a2-c6c9-41da-8887-cb4527f3ecce",
+      "id": "1768337473235",
+      "name": " Licen?a Pacote Avan?ado de Software - UTS 500"
+    },
+    {
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comexs-r1g97.firebasestorage.app/o/Imagens%20Acess%C3%B3rios%20UTS%2FFonte%20AC.png?alt=media&token=52ee2292-a6fd-4d51-9083-f73e6b3647d0",
+      "id": "1768344044034",
+      "name": " Fonte AC"
+    },
+    {
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comexs-r1g97.firebasestorage.app/o/Imagens%20Acess%C3%B3rios%20UTS%2FSuporte%20de%20Apoio.png?alt=media&token=33d0724c-b462-40b3-b79b-e6a5afaa3aaa",
+      "name": " Suporte de Mesa",
+      "id": "1768344141527"
+    }
+  ],
+  "softwareVersion": "N/A",
+  "categoryName": "Universal Test Set",
+  "certificates": [],
+  "createdAt": 1768344353788,
+  "name_lower": "uts 500 - universal test set",
+  "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comexs-r1g97.firebasestorage.app/o/Imagens%20Acess%C3%B3rios%20UTS%2FUTS%20500.png?alt=media&token=12dfa7f8-7f42-4ef3-9eea-650eb2313b54",
+  "status": "AVAILABLE",
+  "manufactureDate": 1767916800000,
+  "includedSoftware": "",
+  "notes": "",
+  "categoryId": "XlSjrfilepIJvb71gL26"
+}
+
+==========================================
+
+==========================================
+?? DOCUMENTO 3
+==========================================
+ID: NecyNmdc7IWDNHSqBs0U
+
+?? ESTRUTURA COMPLETA (JSON):
+{
+  "status": "AVAILABLE",
+  "lastCalibrationDate": 1767830400000,
+  "includedSoftware": "",
+  "firmwareVersion": "N/A",
+  "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comexs-r1g97.firebasestorage.app/o/Imagens%20Acess%C3%B3rios%20UTS%2FUTS%20500.png?alt=media&token=12dfa7f8-7f42-4ef3-9eea-650eb2313b54",
+  "categoryName": "Universal Test Set",
+  "serialNumber": "203091270",
+  "createdAt": 1768344620049,
+  "tags": [
+    "Caixa Trif?sica",
+    "Port?til",
+    "10A"
+  ],
+  "manufactureDate": 1767571200000,
+  "categoryId": "XlSjrfilepIJvb71gL26",
+  "name": "UTS 500 - UNIVERSAL TEST SET",
+  "certificates": [],
+  "name_lower": "uts 500 - universal test set",
+  "softwareVersion": "N/A",
+  "rentPrice": 450,
+  "accessories": [
+    {
+      "id": "1768336615933",
+      "name": "Case de Transporte",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comexs-r1g97.firebasestorage.app/o/Imagens%20Acess%C3%B3rios%20UTS%2FCase.png?alt=media&token=7359464f-0a28-4757-8181-eea132fea06c"
+    },
+    {
+      "id": "1768337014544",
+      "name": " Kit de Cabos de Teste ",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comexs-r1g97.firebasestorage.app/o/Imagens%20Acess%C3%B3rios%20UTS%2FKit%20de%20Cabos%20de%20Teste.png?alt=media&token=e80d0ce2-cc0d-4f77-ac2c-3edfa365660a"
+    },
+    {
+      "name": " Kit de Conectores Variados",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comexs-r1g97.firebasestorage.app/o/Imagens%20Acess%C3%B3rios%20UTS%2FKit%20de%20Conectores.png?alt=media&token=f739ddb0-c003-48c3-bf83-1886a412f959",
+      "id": "1768337062972"
+    },
+    {
+      "id": "1768337121144",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comexs-r1g97.firebasestorage.app/o/Imagens%20Acess%C3%B3rios%20UTS%2FPendrive.png?alt=media&token=f15f1390-bca0-4fce-b81c-a90942a0235e",
+      "name": " Pendrive"
+    },
+    {
+      "id": "1768337243385",
+      "name": " Cabo Ethernet RJ45",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comexs-r1g97.firebasestorage.app/o/Imagens%20Acess%C3%B3rios%20UTS%2FCabo%20de%20Rede%20Ethernet%20RJ45.png?alt=media&token=68625816-0ee9-456b-921c-c26b150fbd65"
+    },
+    {
+      "name": " Cabo de Aterramento",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comexs-r1g97.firebasestorage.app/o/Imagens%20Acess%C3%B3rios%20UTS%2FCabo%20terra.png?alt=media&token=fdde71e8-3f31-416c-9c69-9ba229d89c0a",
+      "id": "1768337274705"
+    },
+    {
+      "id": "1768337473235",
+      "name": " Licen?a Pacote Avan?ado de Software - UTS 500",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comexs-r1g97.firebasestorage.app/o/Imagens%20Acess%C3%B3rios%20UTS%2FUTS%20500%20CONTROL%20CENTER.png?alt=media&token=51f099a2-c6c9-41da-8887-cb4527f3ecce"
+    },
+    {
+      "name": " Fonte AC",
+      "id": "1768344044034",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comexs-r1g97.firebasestorage.app/o/Imagens%20Acess%C3%B3rios%20UTS%2FFonte%20AC.png?alt=media&token=52ee2292-a6fd-4d51-9083-f73e6b3647d0"
+    },
+    {
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comexs-r1g97.firebasestorage.app/o/Imagens%20Acess%C3%B3rios%20UTS%2FSuporte%20de%20Apoio.png?alt=media&token=33d0724c-b462-40b3-b79b-e6a5afaa3aaa",
+      "id": "1768344141527",
+      "name": " Suporte de Mesa"
+    }
+  ],
+  "notes": ""
+}
+
+==========================================
+

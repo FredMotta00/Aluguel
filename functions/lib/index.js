@@ -7,6 +7,7 @@ const firestore_1 = require("firebase-functions/v2/firestore");
 const admin = require("firebase-admin");
 const axios_1 = require("axios");
 const params_1 = require("firebase-functions/params");
+const encryption_1 = require("./encryption");
 // Configurações do Asaas
 const ASAAS_API_KEY = (0, params_1.defineSecret)("ASAAS_API_KEY");
 const ASAAS_URL = "https://sandbox.asaas.com/api/v3";
@@ -16,6 +17,21 @@ admin.initializeApp();
  * Evita timeouts durante o deploy/inicialização do módulo
  */
 const getDb = () => admin.firestore();
+/**
+ * Helper para verificar se um usuário é admin
+ * @param uid - User ID to check
+ * @returns Promise<boolean> - True if user is admin
+ */
+async function isUserAdmin(uid) {
+    try {
+        const adminDoc = await getDb().collection('admins').doc(uid).get();
+        return adminDoc.exists;
+    }
+    catch (error) {
+        logger.error("Error checking admin status:", error);
+        return false;
+    }
+}
 /**
  * Valida se uma nova reserva tem conflito de datas
  * Trigger: Quando uma nova reserva é criada
@@ -108,11 +124,17 @@ exports.validateReservationOnCreate = (0, firestore_1.onDocumentCreated)("reserv
 /**
  * Cloud Function HTTP para validar manualmente uma reserva
  * Útil para revalidações ou testes
+ * APENAS ADMINS podem executar esta função
  */
 exports.validateReservation = (0, https_1.onCall)(async (request) => {
-    // Verificar autenticação
+    // 1. Verificar autenticação
     if (!request.auth) {
         throw new https_1.HttpsError("unauthenticated", "Usuário não autenticado");
+    }
+    // 2. Verificar se usuário é admin
+    const userIsAdmin = await isUserAdmin(request.auth.uid);
+    if (!userIsAdmin) {
+        throw new https_1.HttpsError("permission-denied", "Apenas administradores podem validar reservas manualmente");
     }
     const { reservaId } = request.data;
     if (!reservaId) {
@@ -169,7 +191,7 @@ exports.validateReservation = (0, https_1.onCall)(async (request) => {
  * Cloud Function para gerar cobranças no Asaas
  */
 exports.criarCobrancaAsaas = (0, https_1.onCall)({
-    secrets: [ASAAS_API_KEY]
+    secrets: [ASAAS_API_KEY, encryption_1.ENCRYPTION_KEY]
 }, async (request) => {
     var _a, _b, _c, _d, _e;
     // 1. Verificar autenticação
@@ -182,13 +204,16 @@ exports.criarCobrancaAsaas = (0, https_1.onCall)({
         throw new https_1.HttpsError("invalid-argument", "Campos obrigatórios: valor, cpfCnpj, nome, formaPagamento");
     }
     try {
+        // Descriptografar CPF/CNPJ antes de usar
+        const decryptedCPF = (0, encryption_1.decrypt)(cpfCnpj);
         const asaasHeaders = {
             "access_token": ASAAS_API_KEY.value(),
             "Content-Type": "application/json"
         };
         // PASSO A: Buscar ou Criar Cliente
-        logger.info(`🔍 Buscando cliente no Asaas: ${cpfCnpj}`);
-        const customerSearch = await axios_1.default.get(`${ASAAS_URL}/customers?cpfCnpj=${cpfCnpj}`, {
+        // Log com CPF mascarado (LGPD compliance)
+        logger.info(`🔍 Buscando cliente no Asaas: ${(0, encryption_1.maskCPF)(decryptedCPF)}`);
+        const customerSearch = await axios_1.default.get(`${ASAAS_URL}/customers?cpfCnpj=${decryptedCPF}`, {
             headers: asaasHeaders
         });
         let customerId = "";
@@ -200,7 +225,7 @@ exports.criarCobrancaAsaas = (0, https_1.onCall)({
             logger.info("🆕 Cliente não encontrado. Criando novo cliente...");
             const newCustomer = await axios_1.default.post(`${ASAAS_URL}/customers`, {
                 name: nome,
-                cpfCnpj: cpfCnpj
+                cpfCnpj: decryptedCPF
             }, { headers: asaasHeaders });
             customerId = newCustomer.data.id;
             logger.info(`✅ Cliente criado com ID: ${customerId}`);

@@ -9,8 +9,6 @@ import { doc, getDoc } from 'firebase/firestore';
 export async function checkIsAdmin(email: string | null): Promise<boolean> {
     if (!email) return false;
 
-
-
     try {
         // Check if there's a document in 'admins' collection with this email as ID
         const adminDocRef = doc(db, 'admins', email);

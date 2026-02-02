@@ -246,6 +246,22 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
         </Link>
+
+        <Link to="/admin/site-editor">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-orange-500/10 rounded-lg">
+                  <ArrowRight className="h-6 w-6 text-orange-600" />
+                </div>
+                <div>
+                  <p className="font-semibold">Editor do Site</p>
+                  <p className="text-xs text-muted-foreground">Gerenciar conteúdo</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       {/* Recent Reservations */}

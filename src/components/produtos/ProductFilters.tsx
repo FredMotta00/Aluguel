@@ -164,12 +164,12 @@ export const ProductFilters = ({ products, categories = [], onFilterChange, clas
                                 {categories.map(cat => (
                                     <div key={cat.id} className="flex items-center space-x-2">
                                         <Checkbox
-                                            id={`cat-${cat.slug}`}
-                                            checked={selectedCategories.includes(cat.slug)}
-                                            onCheckedChange={() => handleCategoryToggle(cat.slug)}
+                                            id={`cat-${cat.id}`}
+                                            checked={selectedCategories.includes(cat.id)}
+                                            onCheckedChange={() => handleCategoryToggle(cat.id)}
                                         />
-                                        <Label htmlFor={`cat-${cat.slug}`} className="text-sm font-normal cursor-pointer text-muted-foreground hover:text-foreground transition-colors">
-                                            {cat.nome}
+                                        <Label htmlFor={`cat-${cat.id}`} className="text-sm font-normal cursor-pointer text-muted-foreground hover:text-foreground transition-colors">
+                                            {cat.name || cat.nome || 'Sem nome'}
                                         </Label>
                                     </div>
                                 ))}

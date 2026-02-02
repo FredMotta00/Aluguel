@@ -7,7 +7,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescri
 import ProdutoCard from '@/components/produtos/ProdutoCard';
 import { ProductFilters } from '@/components/produtos/ProductFilters';
 import { Link, useSearchParams } from 'react-router-dom';
-import { PromoBanner } from '@/components/home/PromoBanner';
+import { PromotionalSlideshow } from '@/components/dashboard/PromotionalSlideshow';
 import {
   Carousel,
   CarouselContent,
@@ -19,6 +19,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import Autoplay from 'embla-carousel-autoplay';
 import { collection, getDocs, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { groupProductsByName, GroupedProduct } from '@/lib/productGrouping';
 
 export interface Produto {
   id: string;
@@ -69,8 +70,12 @@ const features = [
 
 const Home = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  // We keep 'filteredProducts' state to be updated by the Sidebar component
-  const [activeProducts, setActiveProducts] = useState<Produto[]>([]);
+  // State para produtos filtrados vindos do sidebar (RAW, não agrupados)
+  // null = sem filtros ativos (usa allProducts)
+  // [] = com filtros ativos, mas sem resultados
+  const [sidebarFilteredProducts, setSidebarFilteredProducts] = useState<Produto[] | null>(null);
+  // State para produtos agrupados (1 card por modelo)
+  const [activeProducts, setActiveProducts] = useState<GroupedProduct[]>([]);
 
   const {
     data: allProducts = [],
@@ -99,7 +104,7 @@ const Home = () => {
           id: doc.id,
           nome: nome,
           descricao: data.description || "",
-          imagem: accessories[0]?.imageUrl || null,
+          imagem: data.imageUrl || accessories[0]?.imageUrl || null,  // imageUrl direto do produto
           preco_diario: dailyRate,
           preco_mensal: data.monthlyRate || null,
           status: status,
@@ -129,40 +134,61 @@ const Home = () => {
   const [searchParams] = useSearchParams();
   const isMonthlyPlan = searchParams.get('plan') === 'monthly';
 
-  // Initialize activeProducts when data loads
+  // Agrupar produtos por nome (múltiplas unidades físicas → 1 card)
+  const groupedProducts = useMemo(() => {
+    return groupProductsByName(allProducts);
+  }, [allProducts]);
+
+  // LÓGICA CENTRAL: Aplicar busca + filtros do sidebar + filtro monthly
   useEffect(() => {
-    let filtered = allProducts;
-    if (isMonthlyPlan) {
-      filtered = allProducts.filter(p => p.preco_mensal && p.preco_mensal > 0);
-    }
-    setActiveProducts(filtered);
-  }, [allProducts, isMonthlyPlan]);
+    // 1. Determinar base de produtos (filtrados do sidebar OU todos)
+    const baseProducts = sidebarFilteredProducts !== null
+      ? sidebarFilteredProducts
+      : allProducts;
 
-  // Handle updates from sidebar
-  const handleFilterChange = (filtered: Produto[]) => {
-    // Also apply search term if present
+    // 2. Agrupar produtos base
+    let grouped = groupProductsByName(baseProducts);
+
+    // 3. Aplicar busca se houver termo
     const term = searchTerm.toLowerCase().trim();
-    if (!term) {
-      setActiveProducts(filtered);
-      return;
+    if (term) {
+      const searchWords = term.split(/\s+/).filter(word => word.length > 0);
+      grouped = grouped.filter(p => {
+        const textoCompleto = [
+          p.nome,
+          p.descricao,
+          ...(p.especificacoes || [])
+        ].join(' ').toLowerCase();
+
+        return searchWords.some(word => textoCompleto.includes(word));
+      });
     }
 
-    const searchWords = term.split(/\s+/).filter(word => word.length > 0);
-    const finalFiltered = filtered.filter(p => {
-      const textoCompleto = [
-        p.nome,
-        p.descricao,
-        ...(p.especificacoes || [])
-      ].join(' ').toLowerCase();
+    // 4. Aplicar filtro monthly se necessário
+    if (isMonthlyPlan) {
+      grouped = grouped.filter(p => p.preco_mensal && p.preco_mensal > 0);
+    }
 
-      return searchWords.some(word => textoCompleto.includes(word));
-    });
+    setActiveProducts(grouped);
+  }, [searchTerm, sidebarFilteredProducts, allProducts, isMonthlyPlan]);
 
-    setActiveProducts(finalFiltered);
+  // Handle updates from sidebar (recebe produtos RAW do ProductFilters)
+  const handleFilterChange = (filtered: Produto[]) => {
+    // Se o número de produtos filtrados for igual ao total, consideramos que não há filtros ativos
+    // (Isso assume que os filtros sempre começam mostrando tudo)
+    // CUIDADO: Se houver filtros ativos que coincidentemente retornam tudo, isso vai resetar.
+    // Mas para o caso de "limpar filtros", isso funciona.
+
+    if (filtered.length === allProducts.length && allProducts.length > 0) {
+      setSidebarFilteredProducts(null);
+    } else {
+      setSidebarFilteredProducts(filtered);
+    }
   };
 
   return (
     <div className="min-h-screen">
+
       {/* Hero Section */}
       <section className="relative overflow-hidden gradient-hero">
         {/* ... Backgrounds same as before ... */}
@@ -263,8 +289,12 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Promo Banner */}
-      <PromoBanner />
+      {/* Promotional Slideshow */}
+      <section className="py-8 bg-background">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <PromotionalSlideshow />
+        </div>
+      </section>
 
       {/* Main Content Area: Sidebar + Grid */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

@@ -3,9 +3,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
+
+// Route Protection Components
+import { ProtectedRoute } from "@/components/routes/ProtectedRoute";
+import { AdminRoute } from "@/components/routes/AdminRoute";
 
 import Layout from "@/components/layout/Layout";
 import Home from "@/pages/Home";
@@ -32,6 +36,8 @@ import AdminProdutos from "@/pages/admin/AdminProdutos";
 import AdminCategorias from "@/pages/admin/AdminCategorias";
 import AdminPromocoes from "@/pages/admin/AdminPromocoes";
 import AdminPacotes from "@/pages/admin/AdminPacotes";
+import AdminSiteEditor from "@/pages/admin/AdminSiteEditor";
+import AdminUsers from "@/pages/admin/AdminUsers";
 
 
 const queryClient = new QueryClient();
@@ -55,28 +61,52 @@ function App() {
                     <Route path="/produto/:id" element={<ProdutoDetalhes />} />
                     {/* <Route path="/seminovos" element={<Seminovos />} /> REMOVIDO */}
                     <Route path="/planos" element={<PlanosMensais />} />
-                    <Route path="/minhas-reservas" element={<MinhasReservas />} />
-                    <Route path="/minha-conta" element={<ClientDashboard />} />
-                    <Route path="/wallet" element={<Wallet />} />
                     <Route path="/fidelidade" element={<Fidelidade />} />
                     <Route path="/pacotes" element={<Pacotes />} />
+
+                    {/* Protected User Routes - Require Authentication */}
+                    <Route path="/minhas-reservas" element={
+                      <ProtectedRoute>
+                        <MinhasReservas />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/minha-conta" element={
+                      <ProtectedRoute>
+                        <ClientDashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/wallet" element={<Navigate to="/minha-conta" replace />} />
                     <Route path="/carrinho" element={<CartPage />} />
-                    <Route path="/checkout" element={<Checkout />} />
-                    <Route path="/configuracoes" element={<Configuracoes />} />
+                    <Route path="/checkout" element={
+                      <ProtectedRoute>
+                        <Checkout />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/configuracoes" element={
+                      <ProtectedRoute>
+                        <Configuracoes />
+                      </ProtectedRoute>
+                    } />
                   </Route>
 
                   {/* Auth route */}
                   <Route path="/auth" element={<Auth />} />
 
-                  {/* Admin routes */}
+                  {/* Admin routes - Protected with AdminRoute */}
                   <Route path="/admin/login" element={<AdminLogin />} />
-                  <Route path="/admin" element={<AdminLayout />}>
+                  <Route path="/admin" element={
+                    <AdminRoute>
+                      <AdminLayout />
+                    </AdminRoute>
+                  }>
                     <Route index element={<AdminDashboard />} />
                     <Route path="reservas" element={<AdminReservas />} />
                     <Route path="produtos" element={<AdminProdutos />} />
                     <Route path="categorias" element={<AdminCategorias />} />
                     <Route path="promocoes" element={<AdminPromocoes />} />
                     <Route path="pacotes" element={<AdminPacotes />} />
+                    <Route path="site-editor" element={<AdminSiteEditor />} />
+                    <Route path="usuarios" element={<AdminUsers />} />
                   </Route>
 
                   <Route path="*" element={<NotFound />} />
