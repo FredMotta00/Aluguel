@@ -58,7 +58,7 @@ export default function Pacotes() {
                         <div className="flex items-center justify-center gap-3 mb-6">
                             <PackageIcon className="h-12 w-12" />
                             <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tight">
-                                Pacotes e Combos
+                                Planos de Locação
                             </h1>
                         </div>
                         <p className="text-xl md:text-2xl opacity-90 mb-8 leading-relaxed">

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calendar, Check, Shield, Clock, Headphones, ChevronRight, Zap, TrendingUp, Building2, Star, Briefcase, Users } from 'lucide-react';
+import { Calendar, Check, Shield, Clock, Headphones, ChevronRight, Zap, TrendingUp, Building2, Star, Briefcase, Users, Trophy } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,70 +11,150 @@ const PlanosMensais = () => {
   const navigate = useNavigate();
 
   // Plan types configuration
+  // Plan types configuration
+  // Plan types configuration
   const planTypes = [
     {
-      id: 'basico',
-      name: 'Plano Básico',
+      id: 'basic',
+      name: 'Plano Basic',
       icon: Zap,
-      badge: 'Popular',
+      badge: 'Curto Prazo',
       badgeColor: 'bg-blue-500',
-      description: 'Ideal para pequenas empresas e projetos pontuais',
-      price: 'Sob Consulta',
+      description: 'Ideal para locações de curto prazo',
+      originalPrice: 'R$ 1.350,00',
+      price: 'R$ 1.199,90',
       period: 'por período',
       color: 'from-blue-900 via-blue-800 to-slate-900',
       features: [
-        'Locação a partir de 7 dias',
-        'Até 2 equipamentos simultâneos',
-        'Desconto de 10% sobre diária',
-        'Suporte técnico por email',
+        '3 diárias completas',
+        'Ideal para testes pontuais',
         'Retirada na sede',
-        'Manual de operação digital'
+        'Suporte técnico por email',
+        'Manual de operação digital',
+        '*plano válido até 31/03/2026'
       ],
       highlight: false
     },
     {
-      id: 'profissional',
-      name: 'Plano Profissional',
+      id: 'semanal-1',
+      name: 'Plano Semanal I',
+      icon: Clock,
+      badge: 'Economia',
+      badgeColor: 'bg-green-500',
+      description: 'Pacote econômico para uma semana',
+      originalPrice: 'R$ 3.150,00',
+      price: 'R$ 2.225,00',
+      period: 'por semana',
+      color: 'from-green-900 via-emerald-800 to-slate-900',
+      features: [
+        '7 diárias inclusas',
+        'Desconto significativo',
+        'Suporte técnico prioritário',
+        'Entrega facilitada',
+        '*plano válido até 31/03/2026'
+      ],
+      highlight: false
+    },
+    {
+      id: 'semanal-2',
+      name: 'Plano Semanal II',
       icon: TrendingUp,
-      badge: 'Mais Escolhido',
+      badge: 'Popular',
       badgeColor: 'bg-primary',
-      description: 'Para profissionais que precisam de equipamentos regularmente',
-      price: 'Sob Consulta',
-      period: 'mensal',
+      description: 'Mais prazo para seus projetos',
+      originalPrice: 'R$ 4.500,00',
+      price: 'R$ 3.999,90',
+      period: 'por 10 dias',
       color: 'from-primary/90 via-primary/80 to-blue-900',
       features: [
-        'Locação mensal (mínimo 30 dias)',
-        'Até 5 equipamentos simultâneos',
-        'Desconto de 25% sobre diária',
-        'Suporte técnico prioritário 24/7',
-        'Entrega e retirada incluídas',
-        'Manutenção preventiva inclusa',
-        'Treinamento operacional gratuito',
-        'Relatórios técnicos mensais'
+        '10 diárias completas',
+        'Mais prazo para seus projetos',
+        'Suporte técnico 24/7',
+        'Manutenção preventiva',
+        '*plano válido até 31/03/2026'
       ],
       highlight: true
     },
     {
-      id: 'empresarial',
-      name: 'Plano Empresarial',
-      icon: Building2,
-      badge: 'Customizado',
+      id: 'semanal-3',
+      name: 'Plano Semanal III',
+      icon: Calendar,
+      badge: 'Flexível',
+      badgeColor: 'bg-indigo-500',
+      description: 'Meio mês de locação',
+      originalPrice: 'R$ 6.750,00',
+      price: 'R$ 5.999,99',
+      period: 'por 15 dias',
+      color: 'from-indigo-900 via-purple-800 to-slate-900',
+      features: [
+        '15 diárias (Meio mês)',
+        'Ótimo custo-benefício',
+        'Flexibilidade de troca',
+        'Relatórios técnicos',
+        '*plano válido até 31/03/2026'
+      ],
+      highlight: false
+    },
+    {
+      id: 'mensal',
+      name: 'Plano Mensal',
+      icon: Star,
+      badge: '15% OFF',
       badgeColor: 'bg-amber-500',
-      description: 'Soluções sob medida para grandes empresas e contratos de longo prazo',
-      price: 'Personalizado',
-      period: 'anual',
+      description: 'Solução completa para 30 dias',
+      originalPrice: 'R$ 13.500,00',
+      price: 'R$ 11.475,00',
+      period: 'por mês',
       color: 'from-amber-900 via-orange-800 to-slate-900',
       features: [
-        'Locação de longo prazo (12+ meses)',
-        'Equipamentos ilimitados',
-        'Desconto de até 40% sobre diária',
+        '30 diárias completas',
+        '15% de desconto garantido',
         'Gerente de conta dedicado',
-        'SLA personalizado com garantias',
-        'Entrega e logística dedicada',
-        'Treinamento completo da equipe',
-        'Consultoria técnica especializada',
-        'Pool de equipamentos reservados',
-        'Faturamento personalizado'
+        'Troca de equipamentos',
+        'Treinamento incluso',
+        '*plano válido até 31/03/2026'
+      ],
+      highlight: false
+    },
+    {
+      id: 'semestral',
+      name: 'Plano Semestral',
+      icon: Building2,
+      badge: '17.5% OFF',
+      badgeColor: 'bg-purple-600',
+      description: '6 meses de contrato',
+      originalPrice: 'R$ 13.500,00',
+      price: 'R$ 11.137,50',
+      period: 'mensal',
+      color: 'from-purple-900 via-violet-800 to-slate-900',
+      features: [
+        'Contrato de 6 meses',
+        '17.5% de desconto mensal',
+        'Faturamento facilitado',
+        'Manutenção total inclusa',
+        'Consultoria especializada',
+        '*plano válido até 31/03/2026'
+      ],
+      highlight: false
+    },
+    {
+      id: 'anual',
+      name: 'Plano Anual',
+      icon: Trophy,
+      badge: '20% OFF',
+      badgeColor: 'bg-red-600',
+      description: '12 meses de contrato',
+      originalPrice: 'R$ 13.500,00',
+      price: 'R$ 10.800,00',
+      period: 'mensal',
+      color: 'from-red-900 via-rose-800 to-slate-900',
+      features: [
+        'Contrato de 12 meses',
+        '20% de desconto (Máximo)',
+        'Prioridade total no atendimento',
+        'Equipamentos backup',
+        'SLA personalizado',
+        '*plano válido até 31/03/2026'
       ],
       highlight: false
     }
@@ -161,8 +241,8 @@ const PlanosMensais = () => {
                 <Card
                   key={plan.id}
                   className={`relative overflow-hidden ${plan.highlight
-                      ? 'border-primary shadow-2xl scale-105 md:scale-110'
-                      : 'border-border/50 hover:border-primary/50'
+                    ? 'border-primary shadow-2xl scale-105 md:scale-110'
+                    : 'border-border/50 hover:border-primary/50'
                     } transition-all duration-300 cursor-pointer group`}
                   onClick={() => setSelectedPlan(plan.id as any)}
                 >
@@ -196,8 +276,22 @@ const PlanosMensais = () => {
                   <CardContent className="relative z-10 space-y-6">
                     {/* Pricing */}
                     <div>
-                      <div className="text-4xl font-black text-foreground">
-                        {plan.price}
+                      {plan.originalPrice && (
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-sm text-muted-foreground line-through decoration-destructive decoration-2">
+                            {plan.originalPrice}
+                          </span>
+                          <span className="text-xs font-bold text-green-600 bg-green-100 px-1.5 py-0.5 rounded">
+                            OFERTA
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-xs text-muted-foreground font-medium">Por:</span>
+                        <div className="text-4xl font-black text-foreground">
+                          {plan.price}
+                        </div>
                       </div>
                       <div className="text-sm text-muted-foreground">{plan.period}</div>
                     </div>

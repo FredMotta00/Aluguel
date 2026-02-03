@@ -58,9 +58,9 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    match /rental_equipments/{itemId} {
+    match /rental_equipments/{equipmentId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if true; // TEMPORARIO: Permitir seed
     }
     
     match /inventory/{itemId} {

@@ -454,3 +454,82 @@ export const handleAsaasWebhook = onRequest(async (req, res) => {
         });
     }
 });
+
+/**
+ * Cloud Function para enviar proposta automaticamente ao criar pedido
+ * Trigger: Firestore onCreate
+ * Integração: Chama API do GPECX_FLOW (BOS)
+ */
+export const sendProposalOnOrderCreate = onDocumentCreated(
+    "orders/{orderId}",
+    async (event) => {
+        const snap = event.data;
+        if (!snap) return;
+
+        const orderId = event.params.orderId;
+        const order = snap.data();
+
+        // Evitar loop infinito ou reenvio
+        if (order.proposalSent) {
+            logger.info("📄 Proposta já enviada para pedido:", orderId);
+            return;
+        }
+
+        try {
+            logger.info(`🚀 Iniciando envio de proposta para pedido ${orderId}`);
+
+            // URL da API do BOS (GPECX_FLOW)
+            // NOTA: Em produção, usar variável de ambiente
+            // Se rodando no emulador e API local: http://127.0.0.1:9002 (ou host.docker.internal)
+            const BOS_API_URL = "http://localhost:9002/api/proposals/generate";
+
+            // Formatando produtos para o payload da API
+            const products = (order.items || []).map((item: any) => ({
+                name: item.productName || item.name || "Item desconhecido",
+                price: item.price || 0,
+                imageUrl: item.image || item.imageUrl || ""
+            }));
+
+            // Payload para a API do BOS
+            const payload = {
+                customerEmail: order.userEmail,
+                customerName: order.userName || "Cliente",
+                customerCNPJ: order.userCnpj || "",
+                customerPhone: order.userPhone || "",
+                products: products,
+                finalPrice: order.totalPrice || 0,
+                paymentTerms: "A combinar", // Pode vir do pedido se existir
+                deliveryTime: "Imediato",   // Pode ser calculado baseado nos produtos
+                validityDays: "7",
+                freightIncluded: false,
+                quoteType: "RENTAL", // Assumindo locação por padrão
+                additionalNotes: `Pedido gerado via Site EXS Locação\nID do Pedido: ${orderId}`
+            }
+
+            logger.info(`📤 Enviando payload para ${BOS_API_URL}`, { email: payload.customerEmail });
+
+            // Chamada para a API externa
+            const response = await axios.post(BOS_API_URL, payload);
+
+            logger.info("✅ Resposta da API de Proposta:", response.data);
+
+            // Atualizar pedido com sucesso
+            await snap.ref.update({
+                proposalSent: true,
+                proposalSentAt: admin.firestore.FieldValue.serverTimestamp(),
+                proposalApiStatus: "success",
+                proposalPdfUrl: response.data.pdfUrl || null // Se a API retornar a URL
+            });
+
+        } catch (error: any) {
+            logger.error("❌ Erro ao enviar proposta:", error.message, error.response?.data);
+
+            // Registrar erro no pedido (sem falhar a function para não retentar infinitamente se for erro permanente)
+            await snap.ref.update({
+                proposalSent: false,
+                proposalApiStatus: "error",
+                proposalLastError: error.message
+            });
+        }
+    }
+);

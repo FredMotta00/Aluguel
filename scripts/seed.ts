@@ -110,7 +110,7 @@ const products = [
 async function seed() {
     console.log("Starting seed process...");
     try {
-        const inventoryRef = collection(db, "inventory");
+        const inventoryRef = collection(db, "rental_equipments");
 
         for (const product of products) {
             const docRef = await addDoc(inventoryRef, product);
