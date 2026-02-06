@@ -262,35 +262,44 @@ const Fidelidade = () => {
                     </div>
 
                     <div className="grid md:grid-cols-3 gap-8">
-                        {/* Silver Tier */}
-                        <Card className="relative overflow-hidden border-slate-400/30">
-                            <div className="absolute inset-0 bg-gradient-to-br from-slate-400/10 to-slate-600/10"></div>
+                        {/* Essencial Tier */}
+                        <Card className="relative overflow-hidden border-blue-400/30 h-full">
+                            <div className="absolute inset-0 bg-gradient-to-br from-blue-400/10 to-blue-600/10"></div>
                             <CardHeader className="relative z-10">
                                 <div className="flex items-center justify-between mb-4">
-                                    <Star className="h-8 w-8 text-slate-400" />
-                                    <Badge variant="outline" className="border-slate-400 text-slate-400">Inicial</Badge>
+                                    <Star className="h-8 w-8 text-blue-400" />
+                                    <Badge variant="outline" className="border-blue-400 text-blue-400">Nível 1</Badge>
                                 </div>
-                                <CardTitle className="text-2xl font-black uppercase">Silver</CardTitle>
-                                <p className="text-sm text-muted-foreground">De R$ 0 até R$ 2.499</p>
+                                <CardTitle className="text-2xl font-black uppercase">Essencial</CardTitle>
+                                <p className="text-sm text-muted-foreground mt-2 font-medium">Critério de entrada:</p>
+                                <p className="text-xs text-muted-foreground">Clientes ativos de venda e/ou locação</p>
                             </CardHeader>
                             <CardContent className="relative z-10 space-y-3">
-                                <div className="flex items-center gap-2 text-sm">
-                                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                                    <span>5% de cashback</span>
+                                <div className="flex items-start gap-2 text-sm">
+                                    <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                                    <span>Desconto na primeira locação BEMVINDO*</span>
                                 </div>
-                                <div className="flex items-center gap-2 text-sm">
-                                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                                    <span>Suporte prioritário</span>
+                                <div className="flex items-start gap-2 text-sm">
+                                    <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                                    <span className="font-bold">0,5% de cashback</span>
                                 </div>
-                                <div className="flex items-center gap-2 text-sm">
-                                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                                    <span>Cupons exclusivos</span>
+                                <div className="flex items-start gap-2 text-sm">
+                                    <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                                    <span>Acesso ao catálogo completo</span>
+                                </div>
+                                <div className="flex items-start gap-2 text-sm">
+                                    <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                                    <span>5% OFF em cursos SPCS*</span>
+                                </div>
+                                <div className="flex items-start gap-2 text-sm">
+                                    <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                                    <span>Novidades mensais</span>
                                 </div>
                             </CardContent>
                         </Card>
 
-                        {/* Gold Tier */}
-                        <Card className="relative overflow-hidden border-amber-500/30 scale-105 shadow-xl">
+                        {/* Avançado Tier */}
+                        <Card className="relative overflow-hidden border-amber-500/30 scale-105 shadow-xl h-full">
                             <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-orange-600/10"></div>
                             <div className="absolute -top-1 -right-1">
                                 <Badge className="bg-amber-500 text-black font-black">POPULAR</Badge>
@@ -298,58 +307,78 @@ const Fidelidade = () => {
                             <CardHeader className="relative z-10">
                                 <div className="flex items-center justify-between mb-4">
                                     <Star className="h-8 w-8 text-amber-500 fill-amber-500" />
-                                    <Badge variant="outline" className="border-amber-500 text-amber-500">Premium</Badge>
+                                    <Badge variant="outline" className="border-amber-500 text-amber-500">Nível 2</Badge>
                                 </div>
-                                <CardTitle className="text-2xl font-black uppercase">Gold</CardTitle>
-                                <p className="text-sm text-muted-foreground">De R$ 2.500 até R$ 9.999</p>
+                                <CardTitle className="text-2xl font-black uppercase">Avançado</CardTitle>
+                                <p className="text-sm text-muted-foreground mt-2 font-medium">Critério de entrada:</p>
+                                <p className="text-xs text-muted-foreground">
+                                    Locações &gt; R$ 40.000/ano<br />
+                                    Ou Contrato ≥ 6 meses
+                                </p>
                             </CardHeader>
                             <CardContent className="relative z-10 space-y-3">
-                                <div className="flex items-center gap-2 text-sm">
-                                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                                    <span className="font-bold">10% de cashback</span>
+                                <div className="flex items-start gap-2 text-sm">
+                                    <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                                    <span>3% desconto/mês em locações</span>
                                 </div>
-                                <div className="flex items-center gap-2 text-sm">
-                                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                                    <span>Entrega prioritária</span>
+                                <div className="flex items-start gap-2 text-sm">
+                                    <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                                    <span className="font-bold">1% de cashback</span>
                                 </div>
-                                <div className="flex items-center gap-2 text-sm">
-                                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                                    <span>Check-in antecipado</span>
+                                <div className="flex items-start gap-2 text-sm">
+                                    <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                                    <span>10% OFF em cursos SPCS*</span>
                                 </div>
-                                <div className="flex items-center gap-2 text-sm">
-                                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                                    <span>Upgrades gratuitos</span>
+                                <div className="flex items-start gap-2 text-sm">
+                                    <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                                    <span>1 Curso Online Grátis/ano*</span>
+                                </div>
+                                <div className="flex items-start gap-2 text-sm">
+                                    <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                                    <span>Ofertas exclusivas</span>
                                 </div>
                             </CardContent>
                         </Card>
 
-                        {/* Platinum Tier */}
-                        <Card className="relative overflow-hidden border-purple-500/30">
+                        {/* Premium Tier */}
+                        <Card className="relative overflow-hidden border-purple-500/30 h-full">
                             <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-violet-600/10"></div>
                             <CardHeader className="relative z-10">
                                 <div className="flex items-center justify-between mb-4">
                                     <Trophy className="h-8 w-8 text-purple-500" />
-                                    <Badge variant="outline" className="border-purple-500 text-purple-500">Elite</Badge>
+                                    <Badge variant="outline" className="border-purple-500 text-purple-500">Nível 3</Badge>
                                 </div>
-                                <CardTitle className="text-2xl font-black uppercase">Platinum</CardTitle>
-                                <p className="text-sm text-muted-foreground">Acima de R$ 10.000</p>
+                                <CardTitle className="text-2xl font-black uppercase">Premium</CardTitle>
+                                <p className="text-sm text-muted-foreground mt-2 font-medium">Critério de entrada:</p>
+                                <p className="text-xs text-muted-foreground">
+                                    Locações &gt; R$ 85.000/ano<br />
+                                    Ou Contrato Anual
+                                </p>
                             </CardHeader>
                             <CardContent className="relative z-10 space-y-3">
-                                <div className="flex items-center gap-2 text-sm">
-                                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                                    <span className="font-bold">15% de cashback</span>
+                                <div className="flex items-start gap-2 text-sm">
+                                    <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                                    <span>Desconto Locação Anual</span>
                                 </div>
-                                <div className="flex items-center gap-2 text-sm">
-                                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                                    <span>Gerente de conta dedicado</span>
+                                <div className="flex items-start gap-2 text-sm">
+                                    <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                                    <span className="font-bold">1,5% de cashback</span>
                                 </div>
-                                <div className="flex items-center gap-2 text-sm">
-                                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                                    <span>Acesso antecipado a novos equipamentos</span>
+                                <div className="flex items-start gap-2 text-sm">
+                                    <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                                    <span>15% OFF em cursos SPCS*</span>
                                 </div>
-                                <div className="flex items-center gap-2 text-sm">
-                                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                                    <span>Condições especiais personalizadas</span>
+                                <div className="flex items-start gap-2 text-sm">
+                                    <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                                    <span>Acesso antecipado</span>
+                                </div>
+                                <div className="flex items-start gap-2 text-sm">
+                                    <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                                    <span>1 Curso Online Grátis/ano*</span>
+                                </div>
+                                <div className="flex items-start gap-2 text-sm">
+                                    <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                                    <span>1 Consultoria Online Grátis*</span>
                                 </div>
                             </CardContent>
                         </Card>

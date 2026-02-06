@@ -245,9 +245,9 @@ const Home = () => {
                       <CarouselItem key={produto.id}>
                         <Link to={`/produto/${produto.id}`}>
                           <Card className="bg-card/90 backdrop-blur-sm border-primary-foreground/10 overflow-hidden hover:shadow-2xl transition-all duration-300 group">
-                            <div className="relative h-48 bg-muted">
+                            <div className="relative h-60 bg-muted">
                               {produto.imagem ? (
-                                <img src={produto.imagem} alt={produto.nome} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                <img src={produto.imagem} alt={produto.nome} className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-500" />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center text-muted-foreground"><Briefcase className="w-16 h-16 opacity-30" /></div>
                               )}

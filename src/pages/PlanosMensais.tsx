@@ -26,11 +26,14 @@ const PlanosMensais = () => {
       period: 'por período',
       color: 'from-blue-900 via-blue-800 to-slate-900',
       features: [
-        '3 diárias completas',
-        'Ideal para testes pontuais',
-        'Retirada na sede',
-        'Suporte técnico por email',
-        'Manual de operação digital',
+        '3 diárias',
+        'Treinamento operacional gratuito',
+        'Certificado de Calibração RBC',
+        'Suporte Técnico Vitalício',
+        'Inovação Tecnológica e Software Intuitivo',
+        'Comunidade EXSColab',
+        'Cashback',
+        'Acúmulo de pontos no Programa de Fidelidade',
         '*plano válido até 31/03/2026'
       ],
       highlight: false
@@ -47,10 +50,14 @@ const PlanosMensais = () => {
       period: 'por semana',
       color: 'from-green-900 via-emerald-800 to-slate-900',
       features: [
-        '7 diárias inclusas',
-        'Desconto significativo',
-        'Suporte técnico prioritário',
-        'Entrega facilitada',
+        '7 diárias',
+        'Treinamento operacional gratuito',
+        'Certificado de Calibração RBC',
+        'Suporte Técnico Vitalício',
+        'Inovação Tecnológica e Software Intuitivo',
+        'Comunidade EXSColab',
+        'Cashback',
+        'Acúmulo de pontos no Programa de Fidelidade',
         '*plano válido até 31/03/2026'
       ],
       highlight: false
@@ -67,10 +74,14 @@ const PlanosMensais = () => {
       period: 'por 10 dias',
       color: 'from-primary/90 via-primary/80 to-blue-900',
       features: [
-        '10 diárias completas',
-        'Mais prazo para seus projetos',
-        'Suporte técnico 24/7',
-        'Manutenção preventiva',
+        '10 diárias',
+        'Treinamento operacional gratuito',
+        'Certificado de Calibração RBC',
+        'Suporte Técnico Vitalício',
+        'Inovação Tecnológica e Software Intuitivo',
+        'Comunidade EXSColab',
+        'Cashback',
+        'Acúmulo de pontos no Programa de Fidelidade',
         '*plano válido até 31/03/2026'
       ],
       highlight: true
@@ -87,10 +98,14 @@ const PlanosMensais = () => {
       period: 'por 15 dias',
       color: 'from-indigo-900 via-purple-800 to-slate-900',
       features: [
-        '15 diárias (Meio mês)',
-        'Ótimo custo-benefício',
-        'Flexibilidade de troca',
-        'Relatórios técnicos',
+        '15 diárias',
+        'Treinamento operacional gratuito',
+        'Certificado de Calibração RBC',
+        'Suporte Técnico Vitalício',
+        'Inovação Tecnológica e Software Intuitivo',
+        'Comunidade EXSColab',
+        'Cashback',
+        'Acúmulo de pontos no Programa de Fidelidade',
         '*plano válido até 31/03/2026'
       ],
       highlight: false
@@ -107,11 +122,14 @@ const PlanosMensais = () => {
       period: 'por mês',
       color: 'from-amber-900 via-orange-800 to-slate-900',
       features: [
-        '30 diárias completas',
-        '15% de desconto garantido',
-        'Gerente de conta dedicado',
-        'Troca de equipamentos',
-        'Treinamento incluso',
+        '30 diárias',
+        'Treinamento operacional gratuito',
+        'Certificado de Calibração RBC',
+        'Suporte Técnico Vitalício',
+        'Inovação Tecnológica e Software Intuitivo',
+        'Comunidade EXSColab',
+        'Cashback',
+        'Acúmulo de pontos no Programa de Fidelidade',
         '*plano válido até 31/03/2026'
       ],
       highlight: false
@@ -129,10 +147,13 @@ const PlanosMensais = () => {
       color: 'from-purple-900 via-violet-800 to-slate-900',
       features: [
         'Contrato de 6 meses',
-        '17.5% de desconto mensal',
-        'Faturamento facilitado',
-        'Manutenção total inclusa',
-        'Consultoria especializada',
+        'Treinamento operacional gratuito',
+        'Certificado de Calibração RBC',
+        'Suporte Técnico Vitalício',
+        'Inovação Tecnológica e Software Intuitivo',
+        'Comunidade EXSColab',
+        'Cashback',
+        'Acúmulo de pontos no Programa de Fidelidade',
         '*plano válido até 31/03/2026'
       ],
       highlight: false
@@ -150,10 +171,13 @@ const PlanosMensais = () => {
       color: 'from-red-900 via-rose-800 to-slate-900',
       features: [
         'Contrato de 12 meses',
-        '20% de desconto (Máximo)',
-        'Prioridade total no atendimento',
-        'Equipamentos backup',
-        'SLA personalizado',
+        'Treinamento operacional gratuito',
+        'Certificado de Calibração RBC',
+        'Suporte Técnico Vitalício',
+        'Inovação Tecnológica e Software Intuitivo',
+        'Comunidade EXSColab',
+        'Cashback',
+        'Acúmulo de pontos no Programa de Fidelidade',
         '*plano válido até 31/03/2026'
       ],
       highlight: false
@@ -168,8 +192,8 @@ const PlanosMensais = () => {
     },
     {
       icon: Clock,
-      title: 'Disponibilidade Garantida',
-      description: 'Equipamentos reservados para você',
+      title: 'Disponibilidade Imediata*',
+      description: '*Retire seu equipamento em até 4 horas após a reserva (em horário comercial)',
     },
     {
       icon: Headphones,
@@ -179,7 +203,7 @@ const PlanosMensais = () => {
     {
       icon: Star,
       title: 'Flexibilidade',
-      description: 'Troca de equipamentos durante o contrato',
+      description: 'Agende sua locação de forma rápida em nossa plataforma',
     },
   ];
 

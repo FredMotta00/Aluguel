@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handleAsaasWebhook = exports.criarCobrancaAsaas = exports.validateReservation = exports.validateReservationOnCreate = void 0;
+exports.sendProposalOnOrderCreate = exports.handleAsaasWebhook = exports.criarCobrancaAsaas = exports.validateReservation = exports.validateReservationOnCreate = void 0;
 const logger = require("firebase-functions/logger");
 const https_1 = require("firebase-functions/v2/https");
 const firestore_1 = require("firebase-functions/v2/firestore");
@@ -207,7 +207,7 @@ exports.criarCobrancaAsaas = (0, https_1.onCall)({
         // Descriptografar CPF/CNPJ antes de usar
         const decryptedCPF = (0, encryption_1.decrypt)(cpfCnpj);
         const asaasHeaders = {
-            "access_token": ASAAS_API_KEY.value(),
+            "access_token": ASAAS_API_KEY.value().trim(),
             "Content-Type": "application/json"
         };
         // PASSO A: Buscar ou Criar Cliente
@@ -365,6 +365,70 @@ exports.handleAsaasWebhook = (0, https_1.onRequest)(async (req, res) => {
         res.status(500).send({
             error: "Internal server error",
             message: String(error)
+        });
+    }
+});
+/**
+ * Cloud Function para enviar proposta automaticamente ao criar pedido
+ * Trigger: Firestore onCreate
+ * Integração: Chama API do GPECX_FLOW (BOS)
+ */
+exports.sendProposalOnOrderCreate = (0, firestore_1.onDocumentCreated)("orders/{orderId}", async (event) => {
+    var _a;
+    const snap = event.data;
+    if (!snap)
+        return;
+    const orderId = event.params.orderId;
+    const order = snap.data();
+    // Evitar loop infinito ou reenvio
+    if (order.proposalSent) {
+        logger.info("📄 Proposta já enviada para pedido:", orderId);
+        return;
+    }
+    try {
+        logger.info(`🚀 Iniciando envio de proposta para pedido ${orderId}`);
+        // URL da API do BOS (GPECX_FLOW)
+        const BOS_API_URL = "https://gpecxflow.vercel.app/api/proposals/generate";
+        // Formatando produtos para o payload da API
+        const products = (order.items || []).map((item) => ({
+            name: item.productName || item.name || "Item desconhecido",
+            price: item.price || 0,
+            imageUrl: item.image || item.imageUrl || ""
+        }));
+        // Payload para a API do BOS
+        const payload = {
+            customerEmail: order.userEmail,
+            customerName: order.userName || "Cliente",
+            customerCNPJ: order.userCnpj || "",
+            customerPhone: order.userPhone || "",
+            products: products,
+            finalPrice: order.totalPrice || 0,
+            paymentTerms: "A combinar", // Pode vir do pedido se existir
+            deliveryTime: "Imediato", // Pode ser calculado baseado nos produtos
+            validityDays: "7",
+            freightIncluded: false,
+            quoteType: "RENTAL", // Assumindo locação por padrão
+            additionalNotes: `Pedido gerado via Site EXS Locação\nID do Pedido: ${orderId}`
+        };
+        logger.info(`📤 Enviando payload para ${BOS_API_URL}`, { email: payload.customerEmail });
+        // Chamada para a API externa
+        const response = await axios_1.default.post(BOS_API_URL, payload);
+        logger.info("✅ Resposta da API de Proposta:", response.data);
+        // Atualizar pedido com sucesso
+        await snap.ref.update({
+            proposalSent: true,
+            proposalSentAt: admin.firestore.FieldValue.serverTimestamp(),
+            proposalApiStatus: "success",
+            proposalPdfUrl: response.data.pdfUrl || null // Se a API retornar a URL
+        });
+    }
+    catch (error) {
+        logger.error("❌ Erro ao enviar proposta:", error.message, (_a = error.response) === null || _a === void 0 ? void 0 : _a.data);
+        // Registrar erro no pedido (sem falhar a function para não retentar infinitamente se for erro permanente)
+        await snap.ref.update({
+            proposalSent: false,
+            proposalApiStatus: "error",
+            proposalLastError: error.message
         });
     }
 });

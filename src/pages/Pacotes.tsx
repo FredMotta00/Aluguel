@@ -44,7 +44,7 @@ export default function Pacotes() {
     return (
         <div className="min-h-screen">
             {/* Hero Section */}
-            <section className="relative bg-gradient-to-r from-amber-600 to-orange-600 text-white py-16 px-4 overflow-hidden">
+            <section className="relative bg-gradient-to-r from-indigo-600 to-violet-600 text-white py-16 px-4 overflow-hidden">
                 <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjA1IiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-30"></div>
                 <div className="absolute -top-20 -right-20 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
                 <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
@@ -53,30 +53,26 @@ export default function Pacotes() {
                     <div className="text-center max-w-3xl mx-auto">
                         <Badge variant="secondary" className="mb-4 bg-white/20 text-white border-white/30 backdrop-blur-sm">
                             <Sparkles className="h-3 w-3 mr-1" />
-                            Combos Especiais
+                            Kits Completos
                         </Badge>
                         <div className="flex items-center justify-center gap-3 mb-6">
                             <PackageIcon className="h-12 w-12" />
                             <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tight">
-                                Planos de Locação
+                                Pacotes e Combos
                             </h1>
                         </div>
                         <p className="text-xl md:text-2xl opacity-90 mb-8 leading-relaxed">
-                            Economize até 30% com nossas combinações especiais de equipamentos.
-                            Pacotes criados para maximizar seu investimento.
+                            A solução completa para o seu serviço.
+                            Alugue o kit de equipamentos e economize.
                         </p>
                         <div className="flex flex-wrap items-center justify-center gap-4">
                             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
                                 <TrendingDown className="h-5 w-5" />
-                                <span className="font-bold">Até 30% OFF</span>
+                                <span className="font-bold">Melhor Custo-Benefício</span>
                             </div>
                             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
                                 <PackageIcon className="h-5 w-5" />
-                                <span className="font-bold">Combos Prontos</span>
-                            </div>
-                            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
-                                <Shield className="h-5 w-5" />
-                                <span className="font-bold">Suporte Incluso</span>
+                                <span className="font-bold">Tudo em um só lugar</span>
                             </div>
                         </div>
                     </div>

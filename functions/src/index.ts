@@ -263,7 +263,7 @@ export const criarCobrancaAsaas = onCall({
         const decryptedCPF = decrypt(cpfCnpj);
 
         const asaasHeaders = {
-            "access_token": ASAAS_API_KEY.value(),
+            "access_token": ASAAS_API_KEY.value().trim(),
             "Content-Type": "application/json"
         };
 
@@ -479,9 +479,7 @@ export const sendProposalOnOrderCreate = onDocumentCreated(
             logger.info(`🚀 Iniciando envio de proposta para pedido ${orderId}`);
 
             // URL da API do BOS (GPECX_FLOW)
-            // NOTA: Em produção, usar variável de ambiente
-            // Se rodando no emulador e API local: http://127.0.0.1:9002 (ou host.docker.internal)
-            const BOS_API_URL = "http://localhost:9002/api/proposals/generate";
+            const BOS_API_URL = "https://gpecxflow.vercel.app/api/proposals/generate";
 
             // Formatando produtos para o payload da API
             const products = (order.items || []).map((item: any) => ({
